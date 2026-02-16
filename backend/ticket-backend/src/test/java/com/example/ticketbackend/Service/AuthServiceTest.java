@@ -1,8 +1,10 @@
 package com.example.ticketbackend.Service;
 
 import com.example.ticketbackend.Model.User;
+import com.google.firebase.ErrorCode;
 import com.example.ticketbackend.Repository.UserRepository;
 import com.google.cloud.Timestamp;
+import com.google.firebase.FirebaseException;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseAuthException;
 import com.google.firebase.auth.UserRecord;
@@ -50,6 +52,10 @@ class AuthServiceTest {
         mockUserRecord = mock(UserRecord.class);
     }
 
+    /**
+     * Registering tests
+     */
+
     @Test
     void testRegisterUser_Success() throws FirebaseAuthException, ExecutionException, InterruptedException {
         // "Mock" the methods
@@ -90,7 +96,13 @@ class AuthServiceTest {
 
             // Throwing the exception (bc when user registers with same email, exception is thrown)
             when(firebaseAuth.createUser(any(UserRecord.CreateRequest.class)))
-                    .thenThrow(FirebaseAuthException.class);
+                    .thenThrow(new FirebaseAuthException(
+                            new FirebaseException(
+                                    ErrorCode.ALREADY_EXISTS,
+                                    "Email already exists",
+                                    null
+                            )
+                    ));
 
             // Make sure exception is thrown
             assertThrows(FirebaseAuthException.class, () -> {
@@ -109,6 +121,35 @@ class AuthServiceTest {
     }
 
     @Test
+    void testRegisterUser_RepositoryFailure() throws FirebaseAuthException, ExecutionException, InterruptedException {
+        try (MockedStatic<FirebaseAuth> mockedFirebaseAuth = mockStatic(FirebaseAuth.class)) {
+            mockedFirebaseAuth.when(FirebaseAuth::getInstance).thenReturn(firebaseAuth);
+
+            when(mockUserRecord.getUid()).thenReturn("test-uid-123");
+            when(firebaseAuth.createUser(any(UserRecord.CreateRequest.class)))
+                    .thenReturn(mockUserRecord);
+
+            // repository throws exception when trying to save
+            doThrow(new ExecutionException(new RuntimeException("Firestore connection failed")))
+                    .when(userRepository).saveUser(any(User.class));
+
+            // should propagate the exception
+            assertThrows(ExecutionException.class, () -> {
+                authService.registerUser(
+                        "test@example.com",
+                        "password123",
+                        "Test User",
+                        User.UserRole.CUSTOMER
+                );
+            });
+
+            // check that firebase user was created (but save failed)
+            verify(firebaseAuth).createUser(any(UserRecord.CreateRequest.class));
+            verify(userRepository).saveUser(any(User.class));
+        }
+    }
+
+    @Test
     void testGenerateCustomToken_Success() throws FirebaseAuthException {
         String expectedToken = "custom-token-xyz";
         try (MockedStatic<FirebaseAuth> mockedFirebaseAuth = mockStatic(FirebaseAuth.class)) {
@@ -123,6 +164,10 @@ class AuthServiceTest {
             verify(firebaseAuth).createCustomToken("test-uid-123");
         }
     }
+
+    /**
+     * Get user by UID tests
+     */
 
     @Test
     void testGetUserByUid_Success() throws ExecutionException, InterruptedException {
@@ -150,6 +195,10 @@ class AuthServiceTest {
         verify(userRepository).getUserByUid("nonexistent-uid");
     }
 
+    /**
+     * Get user by email tests
+     */
+
     @Test
     void testGetUserByEmail_Success() throws ExecutionException, InterruptedException {
         when(userRepository.getUserByEmail("test@example.com")).thenReturn(testUser);
@@ -175,6 +224,10 @@ class AuthServiceTest {
         assertNull(result);
         verify(userRepository).getUserByEmail("nonexistent@example.com");
     }
+
+    /**
+     * Update user profile tests
+     */
 
     @Test
     void testUpdateUserProfile_Success() throws ExecutionException, InterruptedException, FirebaseAuthException {
@@ -220,6 +273,32 @@ class AuthServiceTest {
     }
 
     @Test
+    void testUpdateUserProfile_WithNullValues() throws Exception {
+        // Set original values
+        testUser.setName("Original Name");
+        testUser.setPhoneNumber("+15145551234");
+
+        try (MockedStatic<FirebaseAuth> mockedFirebaseAuth = mockStatic(FirebaseAuth.class)) {
+            mockedFirebaseAuth.when(FirebaseAuth::getInstance).thenReturn(firebaseAuth);
+            when(userRepository.getUserByUid("test-uid-123")).thenReturn(testUser);
+            when(firebaseAuth.updateUser(any(UserRecord.UpdateRequest.class))).thenReturn(mockUserRecord);
+            doNothing().when(userRepository).updateUser(any(User.class));
+
+            // Act - passing nulls shouldnt change the values
+            User result = authService.updateUserProfile("test-uid-123", null, null);
+
+            // Assert - old values are preserved
+            assertNotNull(result);
+            assertEquals("Original Name", result.getName());
+            assertEquals("+15145551234", result.getPhoneNumber());
+        }
+    }
+
+    /**
+     * Delete user profile tests
+     */
+
+    @Test
     void testDeleteUser_Success() throws FirebaseAuthException, ExecutionException, InterruptedException {
         try (MockedStatic<FirebaseAuth> mockedFirebaseAuth = mockStatic(FirebaseAuth.class)) {
             mockedFirebaseAuth.when(FirebaseAuth::getInstance).thenReturn(firebaseAuth);
@@ -250,6 +329,28 @@ class AuthServiceTest {
 
             verify(firebaseAuth).deleteUser("nonexistent-uid");
             verify(userRepository, never()).deleteUser(anyString());
+        }
+    }
+
+    @Test
+    void testDeleteUser_RepositoryFailure() throws FirebaseAuthException, ExecutionException, InterruptedException {
+        try (MockedStatic<FirebaseAuth> mockedFirebaseAuth = mockStatic(FirebaseAuth.class)) {
+            mockedFirebaseAuth.when(FirebaseAuth::getInstance).thenReturn(firebaseAuth);
+
+            doNothing().when(firebaseAuth).deleteUser("test-uid-123");
+
+            // Repository deletion fails
+            doThrow(new ExecutionException(new RuntimeException("Firestore error")))
+                    .when(userRepository).deleteUser("test-uid-123");
+
+            // should propagate exception
+            assertThrows(ExecutionException.class, () -> {
+                authService.deleteUser("test-uid-123");
+            });
+
+            // check firebase delete was called (but repository failed)
+            verify(firebaseAuth).deleteUser("test-uid-123");
+            verify(userRepository).deleteUser("test-uid-123");
         }
     }
 }

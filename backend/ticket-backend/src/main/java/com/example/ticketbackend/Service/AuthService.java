@@ -77,21 +77,29 @@ public class AuthService {
             throws ExecutionException, InterruptedException, FirebaseAuthException {
 
         // Update in Firebase Auth
-        UserRecord.UpdateRequest request = new UserRecord.UpdateRequest(uid)
-                .setDisplayName(name)
-                .setPhoneNumber(phoneNumber);
+        UserRecord.UpdateRequest request = new UserRecord.UpdateRequest(uid);
+
+        if (name != null) {
+            request.setDisplayName(name);
+        }
+        if (phoneNumber != null) {
+            request.setPhoneNumber(phoneNumber);
+        }
 
         FirebaseAuth.getInstance().updateUser(request);
 
         // Update in Firestore
         User user = userRepository.getUserByUid(uid);
         if (user != null) {
-            user.setName(name);
-            user.setPhoneNumber(phoneNumber);
+            if (name != null) {
+                user.setName(name);
+            }
+            if (phoneNumber != null) {
+                user.setPhoneNumber(phoneNumber);
+            }
             user.setUpdatedAt(Timestamp.now());
             userRepository.updateUser(user);
         }
-
         return user;
     }
 
