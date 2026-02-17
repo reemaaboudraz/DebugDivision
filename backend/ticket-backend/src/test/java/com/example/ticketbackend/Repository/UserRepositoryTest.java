@@ -69,6 +69,10 @@ class UserRepositoryTest {
         testUser.setUpdatedAt(Timestamp.now());
     }
 
+    /**
+     * Saving user tests
+     */
+
     @Test
     void testSaveUser_Success() throws ExecutionException, InterruptedException {
         when(firestore.collection("users")).thenReturn(collectionReference);
@@ -102,6 +106,10 @@ class UserRepositoryTest {
         verify(collectionReference).document("test-uid-123");
         verify(documentReference).set(testUser);
     }
+
+    /**
+     * Getting user by UID tests
+     */
 
     @Test
     void testGetUserByUid_Success() throws ExecutionException, InterruptedException {
@@ -150,6 +158,30 @@ class UserRepositoryTest {
     }
 
     @Test
+    void testGetUserByUid_ExecutionException() throws ExecutionException, InterruptedException {
+        when(firestore.collection("users")).thenReturn(collectionReference);
+        when(collectionReference.document("test-uid-123")).thenReturn(documentReference);
+        when(documentReference.get()).thenReturn(documentSnapshotFuture);
+
+        // make the future.get() throw an exception to simulate Firestore failure
+        when(documentSnapshotFuture.get()).thenThrow(new ExecutionException("Database error", new Throwable()));
+
+        // Act and assert (verify the exception is thrown)
+        assertThrows(ExecutionException.class, () -> {
+            userRepository.getUserByUid("test-uid-123");
+        });
+
+        // check that the methods were called (even though it failed)
+        verify(firestore).collection("users");
+        verify(collectionReference).document("test-uid-123");
+        verify(documentReference).get();
+    }
+
+    /**
+     * Getting users by email tests
+     */
+
+    @Test
     void testGetUserByEmail_Success() throws ExecutionException, InterruptedException {
         when(firestore.collection("users")).thenReturn(collectionReference);
         when(collectionReference.whereEqualTo("email", "test@example.com")).thenReturn(query);
@@ -194,6 +226,64 @@ class UserRepositoryTest {
     }
 
     @Test
+    void testGetUserByEmail_ExecutionException() throws ExecutionException, InterruptedException {
+        when(firestore.collection("users")).thenReturn(collectionReference);
+        when(collectionReference.whereEqualTo("email", "test@example.com")).thenReturn(query);
+        when(query.get()).thenReturn(querySnapshotFuture);
+
+        // make the future.get() throw an exception to simulate Firestore query failure
+        when(querySnapshotFuture.get()).thenThrow(new ExecutionException("Database error", new Throwable()));
+
+        // Act and ssert (verify the exception is thrown)
+        assertThrows(ExecutionException.class, () -> {
+            userRepository.getUserByEmail("test@example.com");
+        });
+
+        // check the methods were called up to the failure point
+        verify(firestore).collection("users");
+        verify(collectionReference).whereEqualTo("email", "test@example.com");
+        verify(query).get();
+    }
+
+    @Test
+    void testGetUserByEmail_MultipleResults() throws ExecutionException, InterruptedException {
+        // this shouldnt happen (firebase auth prevents duplicate emails), but testing for defense
+        User secondUser = new User();
+        secondUser.setUid("test-uid-456");
+        secondUser.setEmail("test@example.com");
+        secondUser.setName("Second User");
+
+        QueryDocumentSnapshot queryDoc2 = mock(QueryDocumentSnapshot.class);
+
+        when(firestore.collection("users")).thenReturn(collectionReference);
+        when(collectionReference.whereEqualTo("email", "test@example.com")).thenReturn(query);
+        when(query.get()).thenReturn(querySnapshotFuture);
+        when(querySnapshotFuture.get()).thenReturn(querySnapshot);
+
+        // Return 2 documents
+        when(querySnapshot.getDocuments()).thenReturn(Arrays.asList(queryDocumentSnapshot, queryDoc2));
+
+        when(queryDocumentSnapshot.toObject(User.class)).thenReturn(testUser);
+
+        // Act
+        User result = userRepository.getUserByEmail("test@example.com");
+
+        // Assert (should return the first user)
+        assertNotNull(result);
+        assertEquals("test-uid-123", result.getUid());
+        assertEquals("Test User", result.getName());
+
+        verify(firestore).collection("users");
+        verify(collectionReference).whereEqualTo("email", "test@example.com");
+        verify(query).get();
+        verify(querySnapshot).getDocuments();
+    }
+
+    /**
+     * Updating user tests
+     */
+
+    @Test
     void testUpdateUser_Success() throws ExecutionException, InterruptedException {
         when(firestore.collection("users")).thenReturn(collectionReference);
         when(collectionReference.document("test-uid-123")).thenReturn(documentReference);
@@ -209,6 +299,30 @@ class UserRepositoryTest {
         verify(documentReference).set(testUser);
         verify(writeResultFuture).get();
     }
+
+    @Test
+    void testUpdateUser_ExecutionException() throws ExecutionException, InterruptedException {
+        when(firestore.collection("users")).thenReturn(collectionReference);
+        when(collectionReference.document("test-uid-123")).thenReturn(documentReference);
+        when(documentReference.set(testUser)).thenReturn(writeResultFuture);
+
+        // make the future.get() throw an exception to simulate firestore update failure
+        when(writeResultFuture.get()).thenThrow(new ExecutionException("Database error", new Throwable()));
+
+        // act and assert (verify the exception is thrown)
+        assertThrows(ExecutionException.class, () -> {
+            userRepository.updateUser(testUser);
+        });
+
+        // check the methods were called up to the failure point
+        verify(firestore).collection("users");
+        verify(collectionReference).document("test-uid-123");
+        verify(documentReference).set(testUser);
+    }
+
+    /**
+     * Deleting user tests
+     */
 
     @Test
     void testDeleteUser_Success() throws ExecutionException, InterruptedException {
