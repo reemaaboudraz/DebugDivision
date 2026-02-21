@@ -10,6 +10,8 @@ Verify installation: `node --version` and `npm --version`
 
 ## Quick Start
 ```bash
+cd frontend
+
 # Install dependencies
 npm install
 
