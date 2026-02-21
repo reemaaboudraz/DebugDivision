@@ -1,17 +1,11 @@
-import appLogo from '/appicon.svg'
-import Header from './components/navigation/Header';
+import Header from "@/components/navigation/Header.tsx";
 import { Outlet } from "react-router-dom";
 
-function App() {
-
+export default function App() {
   return (
-    <div className='flex flex-col items-center py-5'>
-    <Header/>
-      <div className='bg-background'>
+      <div className="min-h-screen bg-blue-50">
+        <Header />
+        <Outlet />
       </div>
-      <Outlet/>
-    </div>
-  )
+  );
 }
-
-export default App
