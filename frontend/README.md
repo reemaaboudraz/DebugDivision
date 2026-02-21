@@ -1,6 +1,7 @@
 # Frontend - Ticket Platform
 
-React frontend for the Smart Urban Mobility Management System (SUMMS).
+React frontend for the ticket reservation app
+Using TailwindCSS for styling and Shadcn for pre-made components
 
 ## Prerequisites
 - **Node.js**: 18.x, 20.x, or 22.x LTS ([Download here](https://nodejs.org/en/download))
