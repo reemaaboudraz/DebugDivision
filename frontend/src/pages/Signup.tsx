@@ -6,21 +6,46 @@ export default function SignUp() {
     const navigate = useNavigate();
     const [formData, setFormData] = useState({
         fullName: "",
-        emailOrPhone: "",
+        email: "",
+        role: "CUSTOMER", // default
         password: "",
         confirmPassword: "",
     });
 
-    const handleSubmit = (e: React.FormEvent) => {
-        e.preventDefault();
-        if (formData.password !== formData.confirmPassword) {
-            alert("Passwords do not match!");
-            return;
+    const handleSubmit = async (e: React.FormEvent) => {
+      e.preventDefault();
+
+      if (formData.password !== formData.confirmPassword) {
+        alert("Passwords do not match!");
+        return;
+      }
+
+      try {
+        const res = await fetch("/api/auth/register", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            email: formData.email,
+            password: formData.password,
+            name: formData.fullName,
+            role: formData.role, // "CUSTOMER" | "ORGANIZER"
+          }),
+        });
+
+        if (!res.ok) {
+          // backend returns AuthResponseDTO (sometimes as JSON, sometimes plain)
+          const text = await res.text();
+          throw new Error(text || "Registration failed");
         }
-        // Mock registration - in a real app, this would create an account with Firebase
-        console.log("Registration attempt:", formData);
-        // Redirect to login page after "registration"
+
+        const data = await res.json();
+        console.log("Registration success:", data);
+
+        // NEED TO REDIRECT TO PROFILE OR HOMEPAGE
         navigate("/login");
+      } catch (err: any) {
+        alert(err?.message ?? "Registration failed");
+      }
     };
 
     return (
@@ -58,25 +83,41 @@ export default function SignUp() {
                         </div>
 
                         <div>
-                            <label htmlFor="emailOrPhone" className="block text-sm text-[#1F2937] mb-2">
-                                Email or Phone Number
+                            <label htmlFor="email" className="block text-sm text-[#1F2937] mb-2">
+                                Email
                             </label>
                             <div className="relative">
                                 <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
                                     <Mail className="h-5 w-5 text-[#6B7280]" />
                                 </div>
                                 <input
-                                    type="text"
-                                    id="emailOrPhone"
-                                    value={formData.emailOrPhone}
+                                    type="email"
+                                    id="email"
+                                    value={formData.email}
                                     onChange={(e) =>
-                                        setFormData({ ...formData, emailOrPhone: e.target.value })
+                                        setFormData({ ...formData, email: e.target.value })
                                     }
                                     className="w-full pl-12 pr-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#EC4899] focus:border-transparent bg-white text-[#1F2937] placeholder:text-[#6B7280]"
-                                    placeholder="Enter your email or phone"
+                                    placeholder="Enter your email"
                                     required
                                 />
                             </div>
+                        </div>
+
+                        <div>
+                          <label htmlFor="role" className="block text-sm text-[#1F2937] mb-2">
+                            Account Type
+                          </label>
+
+                          <select
+                            id="role"
+                            value={formData.role}
+                            onChange={(e) => setFormData({ ...formData, role: e.target.value })}
+                            className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#EC4899] focus:border-transparent bg-white text-[#1F2937]"
+                          >
+                            <option value="CUSTOMER">Customer</option>
+                            <option value="ORGANIZER">Organizer</option>
+                          </select>
                         </div>
 
                         <div>
