@@ -1,4 +1,4 @@
-name: CI
+name: Backend-CI
 
 on:
   pull_request:
@@ -25,9 +25,16 @@ jobs:
           java-version: "17"
           cache: maven
           cache-dependency-path: backend/ticket-backend/pom.xml
+          
+      - name: Write Firebase service account
+        run: |
+          echo '${{ secrets.FIREBASE_SECRET }}' > ./firebase-service-account.json
+          chmod 600 firebase-service-account.json
 
-      - name: Grant execute permission for gradlew
+      - name: Grant execute permission for mvnw
         run: chmod +x mvnw
 
       - name: Build & test
+        env:
+            FIREBASE_CREDENTIALS: firebase-service-account.json
         run: ./mvnw -B verify
