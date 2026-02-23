@@ -1,4 +1,4 @@
-name: CI
+name: Backend-CI
 
 on:
   pull_request:
@@ -10,6 +10,10 @@ jobs:
   test:
     runs-on: ubuntu-latest
 
+    defaults:
+      run:
+        working-directory: backend/ticket-backend
+
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -19,10 +23,18 @@ jobs:
         with:
           distribution: temurin
           java-version: "17"
-          cache: gradle
+          cache: maven
+          cache-dependency-path: backend/ticket-backend/pom.xml
+          
+      - name: Write Firebase service account
+        run: |
+          echo '${{ secrets.FIREBASE_SECRET }}' > ./firebase-service-account.json
+          chmod 600 firebase-service-account.json
 
-      - name: Grant execute permission for gradlew
-        run: chmod +x gradlew
+      - name: Grant execute permission for mvnw
+        run: chmod +x mvnw
 
       - name: Build & test
-        run: ./gradlew clean test
+        env:
+            FIREBASE_CREDENTIALS: firebase-service-account.json
+        run: ./mvnw -B verify
