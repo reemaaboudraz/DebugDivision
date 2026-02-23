@@ -10,15 +10,27 @@ import org.springframework.context.annotation.Configuration;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.FileInputStream;
 
 @Configuration
 public class FirebaseConfig {
 
     @Bean
     public FirebaseApp initializeFirebase() throws IOException {
-        if (FirebaseApp.getApps().isEmpty()) {
-            InputStream serviceAccount = getClass().getClassLoader()
+
+        InputStream serviceAccount;
+
+        try{
+            //credentials for Integration Testing and Deployment
+            String credentialsPath = System.getenv("FIREBASE_CREDENTIALS");
+            serviceAccount = new FileInputStream(credentialsPath);
+        } catch (Exception e){
+            //credentials for local Environment
+            serviceAccount = getClass().getClassLoader()
                     .getResourceAsStream("firebase-service-account.json");
+        }
+
+        if (FirebaseApp.getApps().isEmpty()) {
 
             if (serviceAccount == null) {
                 throw new IllegalStateException("firebase-service-account.json not found in resources!");
