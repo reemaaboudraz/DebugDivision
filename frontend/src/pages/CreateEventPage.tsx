@@ -65,7 +65,7 @@ export default function CreateEventPage() {
           <div>
             <h1 className="text-4xl text-[#1F2937]">Create Event</h1>
             <p className="text-[#6B7280] mt-1">
-              Add a new event to Firestore.
+              Add a new event.
             </p>
           </div>
         </div>
