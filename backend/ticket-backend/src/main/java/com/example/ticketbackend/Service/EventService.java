@@ -1,26 +1,24 @@
 package com.example.ticketbackend.Service;
 
 import com.example.ticketbackend.DTO.Request.CreateEventRequest;
-import com.google.api.core.ApiFuture;
+import com.example.ticketbackend.Model.Event;
+import com.example.ticketbackend.Repository.EventRepository;
 import com.google.cloud.Timestamp;
-import com.google.cloud.firestore.DocumentReference;
-import com.google.cloud.firestore.Firestore;
 import org.springframework.stereotype.Service;
 
-import java.time.Instant;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.List;
+import java.util.concurrent.ExecutionException;
 
 @Service
 public class EventService {
 
-    private final Firestore firestore;
+    private final EventRepository eventRepository;
 
-    public EventService(Firestore firestore) {
-        this.firestore = firestore;
+    public EventService(EventRepository eventRepository) {
+        this.eventRepository = eventRepository;
     }
 
-    public String createEvent(CreateEventRequest req) throws Exception {
+    public String createEvent(CreateEventRequest req) throws ExecutionException, InterruptedException {
         if (req == null) throw new IllegalArgumentException("Request body is required.");
         if (req.getName() == null || req.getName().trim().isEmpty())
             throw new IllegalArgumentException("Event name is required.");
@@ -34,15 +32,42 @@ public class EventService {
                 (int) ((req.getEventDateMillis() % 1000) * 1_000_000)
         );
 
-        Map<String, Object> doc = new HashMap<>();
-        doc.put("name", req.getName().trim());
-        doc.put("location", req.getLocation() == null ? "" : req.getLocation().trim());
-        doc.put("availableTickets", req.getAvailableTickets());
-        doc.put("eventDate", eventDate);
-        doc.put("organizerId", req.getOrganizerId() == null ? "" : req.getOrganizerId().trim());
-        doc.put("createdAt", Instant.now().toString());
+        Event event = new Event();
+        event.setName(req.getName().trim());
+        event.setLocation(req.getLocation() == null ? "" : req.getLocation().trim());
+        event.setAvailableTickets(req.getAvailableTickets());
+        event.setEventDate(eventDate);
+        event.setOrganizerId(req.getOrganizerId() == null ? "" : req.getOrganizerId().trim());
 
-        ApiFuture<DocumentReference> added = firestore.collection("events").add(doc);
-        return added.get().getId();
+        return eventRepository.saveEvent(event);
+    }
+
+    public Event getEventById(String id) throws ExecutionException, InterruptedException {
+        return eventRepository.getEventById(id);
+    }
+
+    public List<Event> getAllEvents() throws ExecutionException, InterruptedException {
+        return eventRepository.getAllEvents();
+    }
+
+    public void deleteEvent(String id) throws ExecutionException, InterruptedException {
+        eventRepository.deleteEvent(id);
+    }
+
+    public void updateEvent(String id, CreateEventRequest req) throws ExecutionException, InterruptedException {
+        Event existing = eventRepository.getEventById(id);
+        if (existing == null) throw new IllegalArgumentException("Event not found.");
+
+        Timestamp eventDate = Timestamp.ofTimeSecondsAndNanos(
+                req.getEventDateMillis() / 1000,
+                (int) ((req.getEventDateMillis() % 1000) * 1_000_000)
+        );
+
+        existing.setName(req.getName().trim());
+        existing.setLocation(req.getLocation() == null ? "" : req.getLocation().trim());
+        existing.setAvailableTickets(req.getAvailableTickets());
+        existing.setEventDate(eventDate);
+
+        eventRepository.updateEvent(existing);
     }
 }
