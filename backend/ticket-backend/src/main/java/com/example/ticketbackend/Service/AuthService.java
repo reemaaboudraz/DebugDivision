@@ -5,6 +5,7 @@ import com.example.ticketbackend.Repository.UserRepository;
 import com.google.cloud.Timestamp;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseAuthException;
+import com.google.firebase.auth.FirebaseToken;
 import com.google.firebase.auth.UserRecord;
 import org.springframework.stereotype.Service;
 
@@ -48,12 +49,39 @@ public class AuthService {
 
         return user;
     }
+    /**
+     * save a user who registered via phone to Firestore
+     */
+    public User registerUserPhone(String uid, String phoneNumber, String name, User.UserRole role)
+            throws ExecutionException, InterruptedException {
+
+        User existingUser = userRepository.getUserByUid(uid);
+        if (existingUser != null) {
+            return existingUser;
+        }
+
+        User user = new User();
+        user.setUid(uid);
+        user.setPhoneNumber(phoneNumber);
+        user.setName(name);
+        user.setRole(role);
+        user.setEmailVerified(false);
+        user.setCreatedAt(Timestamp.now());
+        user.setUpdatedAt(Timestamp.now());
+
+        userRepository.saveUser(user);
+        return user;
+    }
 
     /**
      * Generate a custom token for a user
      */
     public String generateCustomToken(String uid) throws FirebaseAuthException {
         return FirebaseAuth.getInstance().createCustomToken(uid);
+    }
+
+    public FirebaseToken verifyIdToken(String idToken) throws FirebaseAuthException {
+        return FirebaseAuth.getInstance().verifyIdToken(idToken);
     }
 
     /**

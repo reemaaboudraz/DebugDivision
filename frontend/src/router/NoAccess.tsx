@@ -1,10 +1,10 @@
 import {Link}  from "react-router-dom";
 
-export default function NotFound(){
+export default function NotFound({description}: {description: string}){
     return (
         <div className="flex flex-col py-40 gap-y-20 items-center">
-            <h1 className="text-5xl">ERROR 404</h1>
-            <h1>PAGE NOT FOUND</h1>
+            <h1 className="text-5xl">ERROR 403</h1>
+            <h1>{description}</h1>
             <Link to={"/"} className="bg-[#3B82F6] border p-4 rounded-2xl hover:bg-[#2563EB] text-white">Go Back</Link>
         </div>
     );

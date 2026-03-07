@@ -5,6 +5,7 @@ import com.example.ticketbackend.DTO.Response.AuthResponseDTO;
 import com.example.ticketbackend.Model.User;
 import com.example.ticketbackend.Service.AuthService;
 import com.google.firebase.auth.FirebaseAuthException;
+import com.google.firebase.auth.FirebaseToken;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -49,6 +50,45 @@ public class AuthController {
             );
 
             return ResponseEntity.status(HttpStatus.CREATED).body(response);
+
+        } catch (FirebaseAuthException e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body(new AuthResponseDTO("Registration failed: " + e.getMessage()));
+        } catch (ExecutionException | InterruptedException e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(new AuthResponseDTO("Server error: " + e.getMessage()));
+        }
+    }
+
+    /**
+     * create a new user in firestore
+     * POST /api/auth/register
+     */
+    @PostMapping("/register-phone")
+    public ResponseEntity<?> registerWithPhone(
+            @RequestHeader("Authorization") String authHeader,
+            @RequestBody RegisterRequestDTO request) {
+        try {
+
+            if (authHeader == null || !authHeader.startsWith("Bearer ")) {
+                System.out.println(authHeader);
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                        .body(new AuthResponseDTO("Missing or invalid Authorization header"));
+            }
+
+            String idToken = authHeader.substring(7);
+            FirebaseToken decodedToken = authService.verifyIdToken(idToken);
+
+            String uid = decodedToken.getUid();
+
+            // Register user
+            User user = authService.registerUserPhone(
+                    uid,
+                    request.getPhoneNumber(),
+                    request.getName(),
+                    request.getRole()
+            );
+            return ResponseEntity.status(HttpStatus.CREATED).body(user);
 
         } catch (FirebaseAuthException e) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST)

@@ -1,21 +1,11 @@
 import { useState } from "react";
-import { Link, useNavigate } from "react-router";
-import { Mail, Lock } from "lucide-react";
+import LoginViaEmail from "@/components/auth/LoginViaEmailForm";
+import LoginViaPhone from "@/components/auth/LoginViaPhoneForm";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { Link } from "react-router-dom";
 
 export default function Login() {
-    const navigate = useNavigate();
-    const [formData, setFormData] = useState({
-        emailOrPhone: "",
-        password: "",
-    });
-
-    const handleSubmit = (e: React.FormEvent) => {
-        e.preventDefault();
-        // Mock login - in a real app, this would authenticate with Firebase
-        console.log("Login attempt:", formData);
-        // Redirect to home page after "login"
-        navigate("/");
-    };
+    const [loginMethod, setLoginMethod] = useState<"email" | "phone">("email");
 
     return (
         <div className="min-h-[calc(100vh-4rem)] flex items-center justify-center px-4 py-12">
@@ -26,61 +16,29 @@ export default function Login() {
                             Login to Tixy
                         </h2>
                         <p className="text-[#6B7280]">Welcome back! Please login to your account.</p>
-                    </div>
-
-                    <form onSubmit={handleSubmit} className="space-y-5">
-                        <div>
-                            <label htmlFor="emailOrPhone" className="block text-sm text-[#1F2937] mb-2">
-                                Email or Phone Number
-                            </label>
-                            <div className="relative">
-                                <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-                                    <Mail className="h-5 w-5 text-[#6B7280]" />
-                                </div>
-                                <input
-                                    type="text"
-                                    id="emailOrPhone"
-                                    value={formData.emailOrPhone}
-                                    onChange={(e) =>
-                                        setFormData({ ...formData, emailOrPhone: e.target.value })
-                                    }
-                                    className="w-full pl-12 pr-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#3B82F6] focus:border-transparent bg-white text-[#1F2937] placeholder:text-[#6B7280]"
-                                    placeholder="Enter your email or phone"
-                                    required
-                                />
-                            </div>
-                        </div>
-
-                        <div>
-                            <label htmlFor="password" className="block text-sm text-[#1F2937] mb-2">
-                                Password
-                            </label>
-                            <div className="relative">
-                                <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-                                    <Lock className="h-5 w-5 text-[#6B7280]" />
-                                </div>
-                                <input
-                                    type="password"
-                                    id="password"
-                                    value={formData.password}
-                                    onChange={(e) =>
-                                        setFormData({ ...formData, password: e.target.value })
-                                    }
-                                    className="w-full pl-12 pr-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#3B82F6] focus:border-transparent bg-white text-[#1F2937] placeholder:text-[#6B7280]"
-                                    placeholder="Enter your password"
-                                    required
-                                />
-                            </div>
-                        </div>
-
-                        <button
-                            type="submit"
-                            className="w-full px-6 py-3 bg-[#3B82F6] text-white rounded-xl hover:bg-[#2563EB] hover:shadow-lg transition-all text-lg"
-                        >
-                            Login
-                        </button>
-                    </form>
-
+                    </div> 
+                    <RadioGroup
+                        value={loginMethod}
+                        onValueChange={(value: "email" | "phone") => setLoginMethod(value)}
+                        className="flex gap-6 items-center m-6"
+                    >
+                            <div className="text-gray-500">Log in with</div>
+                            <RadioGroupItem value="email" id="email" className="sr-only" />
+                            <label className={
+                                `rounded-xl border p-2 
+                                ${loginMethod == "email" ? "bg-[#EC4899] hover:bg-[#DB2777] text-white" : "hover:bg-accent"} 
+                                `
+                            }
+                            htmlFor="email">Email</label>
+                            <RadioGroupItem value="phone" id="phone" className="sr-only"/>
+                            <label className={
+                                `rounded-xl border p-2 
+                                ${loginMethod == "phone" ? "bg-[#EC4899] hover:bg-[#DB2777] text-white" : "hover:bg-accent"} 
+                                `
+                            } 
+                            htmlFor="phone">Phone</label>
+                    </RadioGroup>
+                    {loginMethod=="phone" ? <LoginViaPhone/>: <LoginViaEmail/>}
                     <div className="mt-6 text-center">
                         <p className="text-sm text-[#6B7280]">
                             Don't have an account?{" "}
