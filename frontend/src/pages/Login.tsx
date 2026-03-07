@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Link, useNavigate } from "react-router";
+import { Link, useNavigate } from "react-router-dom";
 import { Mail, Lock } from "lucide-react";
 
 export default function Login() {
@@ -13,8 +13,9 @@ export default function Login() {
         e.preventDefault();
         // Mock login - in a real app, this would authenticate with Firebase
         console.log("Login attempt:", formData);
-        // Redirect to home page after "login"
-        navigate("/");
+        // FOR TESTING WHILE AUTHENTICATION ISNT IMPLEMENTED
+        const isOrganizer = formData.emailOrPhone.toLowerCase().includes("org");
+        navigate(isOrganizer ? "/organizer/dashboard" : "/");
     };
 
     return (
