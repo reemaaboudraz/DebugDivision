@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Link} from "react-router";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
-import RegisterViaEmail from "@/components/auth/RegisterViaEmailFOrm";
+import RegisterViaEmail from "@/components/auth/RegisterViaEmailForm";
 import RegisterViaPhone from "@/components/auth/RegisterViaPhoneForm";
 
 export default function SignUp() {

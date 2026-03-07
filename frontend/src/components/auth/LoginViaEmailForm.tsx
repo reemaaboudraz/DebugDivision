@@ -18,7 +18,7 @@ export default function LoginViaEmail() {
         try{
             await login(formData.email, formData.password)
             setHint("")
-            navigate("/dashboard");
+            navigate("/");
         } catch (err: any) {
             setHint(err?.message || "Login failed for unknown reason")
         }

@@ -5,6 +5,8 @@ import RouteError from "./RouteError";
 import Home from "@/pages/Home";
 import Login from "@/pages/Login";
 import Signup from "@/pages/Signup";
+import OrganizerDashboard from "@/pages/OrganizerDashboard";
+import CreateEventPage from "@/pages/CreateEventPage";
 
 const router = createBrowserRouter([
     {
@@ -28,7 +30,16 @@ const router = createBrowserRouter([
                 path:"/404",
                 element:<NotFound/>
             },
+            {
+                path: "/organizer/dashboard",
+                element: <OrganizerDashboard />,
+            },
+            {
+                path: "/organizer/events/create",
+                element: <CreateEventPage />,
+            },
         ]
     },
 ]);
 export default router;
+
