@@ -2,11 +2,16 @@ import { useState } from "react";
 import LoginViaEmail from "@/components/auth/LoginViaEmailForm";
 import LoginViaPhone from "@/components/auth/LoginViaPhoneForm";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
-import { Link } from "react-router-dom";
+import { Link, Navigate } from "react-router-dom";
+import { Spinner } from "@/components/ui/spinner";
+import { useAuth } from "@/AuthContext";
 
 export default function Login() {
     const [loginMethod, setLoginMethod] = useState<"email" | "phone">("email");
 
+    const {uid, loading} = useAuth();
+    if(loading) return <Spinner className="min-h-100"/>
+    if(uid) return <Navigate to="/" replace />;
     return (
         <div className="min-h-[calc(100vh-4rem)] flex items-center justify-center px-4 py-12">
             <div className="w-full max-w-md">

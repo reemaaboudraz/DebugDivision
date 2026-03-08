@@ -5,7 +5,7 @@ import {
   confirmPhoneVerificationCode,
 } from "@/services/AuthService";
 import { User, Phone, CheckCircle } from "lucide-react";
-import { protectedPost } from "@/lib/api";
+import { authenticatedPost } from "@/lib/api";
 
 export default function RegisterViaPhone() {
 
@@ -52,7 +52,7 @@ export default function RegisterViaPhone() {
     try {
       await confirmPhoneVerificationCode(code);
 
-      const res = await protectedPost("/api/auth/register-phone", 
+      const res = await authenticatedPost("/api/auth/register-phone", 
         JSON.stringify({
           name: formData.fullName,
           role: formData.role,

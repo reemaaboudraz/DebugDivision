@@ -2,7 +2,7 @@ import { auth } from "./firebaseConfig";
 
 //helper fetch functions that automatically include the bearer token
 
-export async function protectedPost(url:string, data: any){
+export async function authenticatedPost(url:string, data: any){
 
     const token = await auth.currentUser?.getIdToken();
     return fetch(url, {
@@ -11,11 +11,10 @@ export async function protectedPost(url:string, data: any){
           body: data,
     });
 }
-export async function protectedGet(url:string, data: any){
+export async function authenticatedGet(url:string){
     const token = await auth.currentUser?.getIdToken();
     return fetch(url, {
           method: "GET",
           headers: { "Content-Type": "application/json", "Authorization": `Bearer ${token}`},
-          body: data,
     });
 }

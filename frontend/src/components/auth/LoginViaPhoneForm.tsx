@@ -18,12 +18,21 @@ export default function LoginViaPhone() {
     setupPhoneRecaptcha("recaptcha-container");
   }, []);
 
+  const formatPhoneNumber= (phoneNumber: string):string => {
+        phoneNumber.replaceAll(" ", "");
+        phoneNumber.replaceAll("-", "");
+        phoneNumber.replaceAll("(", "");
+        phoneNumber.replaceAll(")", "");
+        phoneNumber = "+1"+phoneNumber;
+        return phoneNumber;
+    }
+
   async function handleSendCode(e: React.SubmitEvent) {
     e.preventDefault();
     setMessage("");
 
     try {
-      await sendPhoneVerificationCode(phone);
+      await sendPhoneVerificationCode(formatPhoneNumber(phone));
       setStep("code");
       setMessage("Verification code sent.");
     } catch (err: any) {

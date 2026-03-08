@@ -71,7 +71,6 @@ public class AuthController {
         try {
 
             if (authHeader == null || !authHeader.startsWith("Bearer ")) {
-                System.out.println(authHeader);
                 return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
                         .body(new AuthResponseDTO("Missing or invalid Authorization header"));
             }
@@ -101,14 +100,26 @@ public class AuthController {
 
     /**
      * Get user profile by UID
-     * Later when we do frontend authentication, we will use token
+     * verified with auth token, for security
      * GET /api/auth/profile?uid=xxx
      */
     @GetMapping("/profile")
-    public ResponseEntity<?> getProfile(@RequestParam String uid) {
+    public ResponseEntity<?> getProfile(
+            @RequestParam String uid,
+            @RequestHeader("Authorization") String authHeader) {
         try {
-            User user = authService.getUserByUid(uid);
+            if (authHeader == null || !authHeader.startsWith("Bearer ")) {
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                        .body(new AuthResponseDTO("Missing or invalid Authorization header"));
+            }
 
+            String idToken = authHeader.substring(7);
+            if(!authService.verifyUidWithToken(uid, idToken)) {
+                return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                        .body(new AuthResponseDTO("Forbidden: UID does not match authenticated user"));
+            }
+
+            User user = authService.getUserByUid(uid);
             if (user == null) {
                 return ResponseEntity.status(HttpStatus.NOT_FOUND)
                         .body(new AuthResponseDTO("User not found"));
@@ -116,7 +127,7 @@ public class AuthController {
 
             return ResponseEntity.ok(user);
 
-        } catch (ExecutionException | InterruptedException e) {
+        } catch (ExecutionException | InterruptedException | FirebaseAuthException e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body(new AuthResponseDTO("Server error: " + e.getMessage()));
         }

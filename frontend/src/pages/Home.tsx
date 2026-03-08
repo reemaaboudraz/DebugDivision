@@ -1,7 +1,12 @@
 import { Link } from "react-router";
 import { Ticket, Film, Music, Plane, Trophy } from "lucide-react";
+import { Spinner } from "@/components/ui/spinner";
+import { useAuth } from "@/AuthContext";
 
 export default function Home() {
+
+    const {uid, loading} = useAuth();
+    
     return (
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
             <div className="text-center mb-16">
@@ -16,6 +21,8 @@ export default function Home() {
                 <p className="text-xl md:text-2xl text-[#6B7280] mb-12 max-w-2xl mx-auto">
                     Book tickets for movies, concerts, sports, and travel easily.
                 </p>
+                {loading && <Spinner/>}
+                {!uid && 
                 <div className="flex gap-4 justify-center flex-wrap">
                     <Link
                         to="/login"
@@ -30,8 +37,8 @@ export default function Home() {
                         Sign Up
                     </Link>
                 </div>
+                }
             </div>
-
             {/* Types of Tickets Available */}
             <div className="grid grid-cols-2 md:grid-cols-4 gap-6 mt-20">
                 <div className="bg-white rounded-2xl p-6 text-center hover:shadow-lg transition-all hover:scale-105 border border-gray-100">

@@ -1,5 +1,6 @@
 package com.example.ticketbackend.Service;
 
+import com.example.ticketbackend.DTO.Response.AuthResponseDTO;
 import com.example.ticketbackend.Model.User;
 import com.example.ticketbackend.Repository.UserRepository;
 import com.google.cloud.Timestamp;
@@ -7,6 +8,8 @@ import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseAuthException;
 import com.google.firebase.auth.FirebaseToken;
 import com.google.firebase.auth.UserRecord;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
 import java.util.concurrent.ExecutionException;
@@ -84,6 +87,13 @@ public class AuthService {
         return FirebaseAuth.getInstance().verifyIdToken(idToken);
     }
 
+    public boolean verifyUidWithToken(String uid, String idToken) throws FirebaseAuthException {
+        FirebaseToken decodedToken = verifyIdToken(idToken);
+        String verifiedUid = decodedToken.getUid();
+        System.out.println(verifiedUid);
+        System.out.println(uid);
+        return (uid.equals(verifiedUid));
+    }
     /**
      * Get user by UID
      */
