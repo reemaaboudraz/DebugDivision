@@ -42,6 +42,18 @@ export default function Header() {
                 </Link>
 
                 <Link
+                    to="/events"
+                    className={`px-4 py-2 rounded-full transition ${
+                        isActive("/events")
+                            ? "bg-blue-100 text-blue-600"
+                            : "text-gray-600 hover:bg-blue-50"
+                     }`}
+                >
+                    Events
+                </Link>
+
+
+                <Link
                     to="/login"
                     className={`px-4 py-2 rounded-full transition ${
                         isActive("/login")
