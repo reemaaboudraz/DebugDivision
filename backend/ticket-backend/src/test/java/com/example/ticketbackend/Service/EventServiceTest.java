@@ -7,6 +7,7 @@ import com.google.cloud.Timestamp;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -18,6 +19,7 @@ import java.util.concurrent.ExecutionException;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.argThat;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
@@ -42,16 +44,38 @@ class EventServiceTest {
         testEvent.setAvailableTickets(50);
         testEvent.setEventDate(Timestamp.ofTimeSecondsAndNanos(1893456000L, 0));
         testEvent.setOrganizerId("organizer-123");
+        testEvent.setCategory("concert");
+        testEvent.setArtist("Test Artist");
+        testEvent.setOrganization("Test Org");
+        testEvent.setCity("Montreal");
+        testEvent.setCountry("Canada");
+        testEvent.setOverview("Overview");
+        testEvent.setVenue("Bell Centre");
+        testEvent.setImageUrl("https://example.com/image.jpg");
+        testEvent.setBuyTicketsUrl("https://example.com/tickets");
 
-        // Setup create request
-        validRequest = new CreateEventRequest();
-        validRequest.setName("Test Event");
-        validRequest.setLocation("Campus Hall");
-        validRequest.setAvailableTickets(50);
-        validRequest.setEventDateMillis(1893456000000L);
-        validRequest.setOrganizerId("organizer-123");
+        validRequest = buildValidRequest();
+
     }
 
+    private CreateEventRequest buildValidRequest() {
+        CreateEventRequest req = new CreateEventRequest();
+        req.setName("Test Event");
+        req.setLocation("Campus Hall");
+        req.setAvailableTickets(50);
+        req.setEventDateMillis(1893456000000L);
+        req.setOrganizerId("organizer-123");
+        req.setCategory("concert");
+        req.setArtist("Test Artist");
+        req.setOrganization("Test Org");
+        req.setCity("Montreal");
+        req.setCountry("Canada");
+        req.setOverview("Overview");
+        req.setVenue("Bell Centre");
+        req.setImageUrl("https://example.com/image.jpg");
+        req.setBuyTicketsUrl("https://example.com/tickets");
+        return req;
+    }
     /**
      * createEvent tests
      */
@@ -68,20 +92,67 @@ class EventServiceTest {
 
     @Test
     void testCreateEvent_SetsFieldsCorrectly() throws ExecutionException, InterruptedException {
-        when(eventRepository.saveEvent(any(Event.class))).thenAnswer(invocation -> {
-            Event saved = invocation.getArgument(0);
-            assertEquals("Test Event", saved.getName());
-            assertEquals("Campus Hall", saved.getLocation());
-            assertEquals(50, saved.getAvailableTickets());
-            assertEquals("organizer-123", saved.getOrganizerId());
-            assertNotNull(saved.getEventDate());
-            return "test-event-id";
-        });
+        when(eventRepository.saveEvent(any(Event.class))).thenReturn("test-event-id");
 
         eventService.createEvent(validRequest);
 
-        verify(eventRepository).saveEvent(any(Event.class));
+        ArgumentCaptor<Event> captor = ArgumentCaptor.forClass(Event.class);
+        verify(eventRepository).saveEvent(captor.capture());
+
+        Event saved = captor.getValue();
+        assertEquals("Test Event", saved.getName());
+        assertEquals("Campus Hall", saved.getLocation());
+        assertEquals(50, saved.getAvailableTickets());
+        assertEquals("organizer-123", saved.getOrganizerId());
+        assertEquals("concert", saved.getCategory());
+        assertEquals("Test Artist", saved.getArtist());
+        assertEquals("Test Org", saved.getOrganization());
+        assertEquals("Montreal", saved.getCity());
+        assertEquals("Canada", saved.getCountry());
+        assertEquals("Overview", saved.getOverview());
+        assertEquals("Bell Centre", saved.getVenue());
+        assertEquals("https://example.com/image.jpg", saved.getImageUrl());
+        assertEquals("https://example.com/tickets", saved.getBuyTicketsUrl());
+        assertNotNull(saved.getEventDate());
     }
+
+
+@Test
+void testCreateEvent_TrimsAndLowercasesFields() throws ExecutionException, InterruptedException {
+    validRequest.setName("  Test Event  ");
+    validRequest.setLocation("  Campus Hall  ");
+    validRequest.setOrganizerId("  organizer-123  ");
+    validRequest.setCategory("  Concert  ");
+    validRequest.setArtist("  Test Artist  ");
+    validRequest.setOrganization("  Test Org  ");
+    validRequest.setCity("  Montreal  ");
+    validRequest.setCountry("  Canada  ");
+    validRequest.setOverview("  Overview  ");
+    validRequest.setVenue("  Bell Centre  ");
+    validRequest.setImageUrl("  https://example.com/image.jpg  ");
+    validRequest.setBuyTicketsUrl("  https://example.com/tickets  ");
+
+    when(eventRepository.saveEvent(any(Event.class))).thenReturn("test-event-id");
+
+    eventService.createEvent(validRequest);
+
+    ArgumentCaptor<Event> captor = ArgumentCaptor.forClass(Event.class);
+    verify(eventRepository).saveEvent(captor.capture());
+
+    Event saved = captor.getValue();
+    assertEquals("Test Event", saved.getName());
+    assertEquals("Campus Hall", saved.getLocation());
+    assertEquals("organizer-123", saved.getOrganizerId());
+    assertEquals("concert", saved.getCategory());
+    assertEquals("Test Artist", saved.getArtist());
+    assertEquals("Test Org", saved.getOrganization());
+    assertEquals("Montreal", saved.getCity());
+    assertEquals("Canada", saved.getCountry());
+    assertEquals("Overview", saved.getOverview());
+    assertEquals("Bell Centre", saved.getVenue());
+    assertEquals("https://example.com/image.jpg", saved.getImageUrl());
+    assertEquals("https://example.com/tickets", saved.getBuyTicketsUrl());
+}
 
     @Test
     void testCreateEvent_NullRequest() throws ExecutionException, InterruptedException{
@@ -146,7 +217,29 @@ class EventServiceTest {
 
         verify(eventRepository, never()).saveEvent(any(Event.class));
     }
+    @Test
+    void testCreateEvent_NullCategory_Throws() throws ExecutionException, InterruptedException {
+        validRequest.setCategory(null);
 
+        IllegalArgumentException ex = assertThrows(IllegalArgumentException.class, () -> {
+            eventService.createEvent(validRequest);
+        });
+
+        assertEquals("category is required.", ex.getMessage());
+        verify(eventRepository, never()).saveEvent(any(Event.class));
+    }
+
+    @Test
+    void testCreateEvent_BlankCategory_Throws() throws ExecutionException, InterruptedException {
+        validRequest.setCategory("   ");
+
+        IllegalArgumentException ex = assertThrows(IllegalArgumentException.class, () -> {
+            eventService.createEvent(validRequest);
+        });
+
+        assertEquals("category is required.", ex.getMessage());
+        verify(eventRepository, never()).saveEvent(any(Event.class));
+    }
     @Test
     void testCreateEvent_NullLocation_DefaultsToEmpty() throws ExecutionException, InterruptedException {
         validRequest.setLocation(null);
@@ -175,7 +268,34 @@ class EventServiceTest {
         verify(eventRepository).saveEvent(any(Event.class));
     }
 
-    @Test
+@Test
+void testCreateEvent_NewFieldsDefaultToEmptyWhenNull() throws ExecutionException, InterruptedException {
+    validRequest.setArtist(null);
+    validRequest.setOrganization(null);
+    validRequest.setCity(null);
+    validRequest.setCountry(null);
+    validRequest.setOverview(null);
+    validRequest.setVenue(null);
+    validRequest.setImageUrl(null);
+    validRequest.setBuyTicketsUrl(null);
+
+    when(eventRepository.saveEvent(any(Event.class))).thenReturn("test-event-id");
+
+    eventService.createEvent(validRequest);
+
+    verify(eventRepository).saveEvent(argThat(saved ->
+            "".equals(saved.getArtist()) &&
+                    "".equals(saved.getOrganization()) &&
+                    "".equals(saved.getCity()) &&
+                    "".equals(saved.getCountry()) &&
+                    "".equals(saved.getOverview()) &&
+                    "".equals(saved.getVenue()) &&
+                    "".equals(saved.getImageUrl()) &&
+                    "".equals(saved.getBuyTicketsUrl())
+    ));
+}
+
+@Test
     void testCreateEvent_RepositoryFailure() throws ExecutionException, InterruptedException {
         when(eventRepository.saveEvent(any(Event.class)))
                 .thenThrow(new ExecutionException(new RuntimeException("Firestore error")));
@@ -317,15 +437,32 @@ class EventServiceTest {
         validRequest.setName("Updated Name");
         validRequest.setLocation("New Location");
         validRequest.setAvailableTickets(100);
+        validRequest.setCategory("sports");
+        validRequest.setArtist("Updated Artist");
+        validRequest.setOrganization("Updated Org");
+        validRequest.setCity("Toronto");
+        validRequest.setCountry("Canada");
+        validRequest.setOverview("Updated Overview");
+        validRequest.setVenue("Updated Venue");
+        validRequest.setImageUrl("https://example.com/updated.jpg");
+        validRequest.setBuyTicketsUrl("https://example.com/updated-tickets");
 
         eventService.updateEvent("test-event-id", validRequest);
 
-        verify(eventRepository).updateEvent(argThat(event -> {
-            assertEquals("Updated Name", event.getName());
-            assertEquals("New Location", event.getLocation());
-            assertEquals(100, event.getAvailableTickets());
-            return true;
-        }));
+        verify(eventRepository).updateEvent(argThat(event ->
+                "Updated Name".equals(event.getName()) &&
+                        "New Location".equals(event.getLocation()) &&
+                        event.getAvailableTickets() == 100 &&
+                        "sports".equals(event.getCategory()) &&
+                        "Updated Artist".equals(event.getArtist()) &&
+                        "Updated Org".equals(event.getOrganization()) &&
+                        "Toronto".equals(event.getCity()) &&
+                        "Canada".equals(event.getCountry()) &&
+                        "Updated Overview".equals(event.getOverview()) &&
+                        "Updated Venue".equals(event.getVenue()) &&
+                        "https://example.com/updated.jpg".equals(event.getImageUrl()) &&
+                        "https://example.com/updated-tickets".equals(event.getBuyTicketsUrl())
+        ));
     }
 
     @Test
@@ -341,6 +478,36 @@ class EventServiceTest {
         verify(eventRepository).getEventById("nonexistent-id");
         verify(eventRepository, never()).updateEvent(any(Event.class));
     }
+@Test
+void testUpdateEvent_NullNewFieldsDefaultToEmpty() throws ExecutionException, InterruptedException {
+    when(eventRepository.getEventById("test-event-id")).thenReturn(testEvent);
+    doNothing().when(eventRepository).updateEvent(any(Event.class));
+
+    validRequest.setLocation(null);
+    validRequest.setCategory("concert");
+    validRequest.setArtist(null);
+    validRequest.setOrganization(null);
+    validRequest.setCity(null);
+    validRequest.setCountry(null);
+    validRequest.setOverview(null);
+    validRequest.setVenue(null);
+    validRequest.setImageUrl(null);
+    validRequest.setBuyTicketsUrl(null);
+
+    eventService.updateEvent("test-event-id", validRequest);
+
+    verify(eventRepository).updateEvent(argThat(event ->
+            "".equals(event.getLocation()) &&
+                    "".equals(event.getArtist()) &&
+                    "".equals(event.getOrganization()) &&
+                    "".equals(event.getCity()) &&
+                    "".equals(event.getCountry()) &&
+                    "".equals(event.getOverview()) &&
+                    "".equals(event.getVenue()) &&
+                    "".equals(event.getImageUrl()) &&
+                    "".equals(event.getBuyTicketsUrl())
+    ));
+}
 
     @Test
     void testUpdateEvent_RepositoryFailureOnFetch() throws ExecutionException, InterruptedException {
