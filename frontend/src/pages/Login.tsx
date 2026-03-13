@@ -14,7 +14,9 @@ export default function Login() {
         // Mock login - in a real app, this would authenticate with Firebase
         console.log("Login attempt:", formData);
         // FOR TESTING WHILE AUTHENTICATION ISNT IMPLEMENTED
-        const isOrganizer = formData.emailOrPhone.toLowerCase().includes("org");
+        const email = formData.emailOrPhone.toLowerCase();
+        const isOrganizer = email.endsWith(".org");
+        localStorage.setItem("tixy_user", JSON.stringify({ email: formData.emailOrPhone }));
         navigate(isOrganizer ? "/organizer/dashboard" : "/");
     };
 
