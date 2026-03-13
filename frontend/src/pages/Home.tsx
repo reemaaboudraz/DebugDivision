@@ -2,6 +2,33 @@ import { Link } from "react-router";
 import { Ticket, Film, Music, Plane, Trophy } from "lucide-react";
 
 export default function Home() {
+    const categoryCards = [
+        {
+          label: "Movies",
+          category: "movie",
+          icon: <Film className="w-8 h-8 text-[#EC4899]" />,
+          bg: "bg-[#FDF2F8]",
+        },
+        {
+          label: "Concerts",
+          category: "concert",
+          icon: <Music className="w-8 h-8 text-[#3B82F6]" />,
+          bg: "bg-[#EFF6FF]",
+        },
+        {
+          label: "Sports",
+          category: "sports",
+          icon: <Trophy className="w-8 h-8 text-[#EC4899]" />,
+          bg: "bg-[#FDF2F8]",
+        },
+        {
+          label: "Travel",
+          category: "travel",
+          icon: <Plane className="w-8 h-8 text-[#3B82F6]" />,
+          bg: "bg-[#EFF6FF]",
+        },
+      ];
+
     return (
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
             <div className="text-center mb-16">
@@ -34,31 +61,19 @@ export default function Home() {
 
             {/* Types of Tickets Available */}
             <div className="grid grid-cols-2 md:grid-cols-4 gap-6 mt-20">
-                <div className="bg-white rounded-2xl p-6 text-center hover:shadow-lg transition-all hover:scale-105 border border-gray-100">
-                    <div className="bg-[#FDF2F8] w-16 h-16 rounded-2xl flex items-center justify-center mx-auto mb-4">
-                        <Film className="w-8 h-8 text-[#EC4899]" />
-                    </div>
-                    <h3 className="text-[#1F2937]">Movies</h3>
+                    {categoryCards.map((card) => (
+                      <Link
+                        key={card.category}
+                        to={`/events?category=${card.category}`}
+                        className="bg-white rounded-2xl p-6 text-center hover:shadow-lg transition-all hover:scale-105 border border-gray-100"
+                      >
+                        <div className={`${card.bg} w-16 h-16 rounded-2xl flex items-center justify-center mx-auto mb-4`}>
+                          {card.icon}
+                        </div>
+                        <h3 className="text-[#1F2937]">{card.label}</h3>
+                      </Link>
+                    ))}
+                  </div>
                 </div>
-                <div className="bg-white rounded-2xl p-6 text-center hover:shadow-lg transition-all hover:scale-105 border border-gray-100">
-                    <div className="bg-[#EFF6FF] w-16 h-16 rounded-2xl flex items-center justify-center mx-auto mb-4">
-                        <Music className="w-8 h-8 text-[#3B82F6]" />
-                    </div>
-                    <h3 className="text-[#1F2937]">Concerts</h3>
-                </div>
-                <div className="bg-white rounded-2xl p-6 text-center hover:shadow-lg transition-all hover:scale-105 border border-gray-100">
-                    <div className="bg-[#FDF2F8] w-16 h-16 rounded-2xl flex items-center justify-center mx-auto mb-4">
-                        <Trophy className="w-8 h-8 text-[#EC4899]" />
-                    </div>
-                    <h3 className="text-[#1F2937]">Sports</h3>
-                </div>
-                <div className="bg-white rounded-2xl p-6 text-center hover:shadow-lg transition-all hover:scale-105 border border-gray-100">
-                    <div className="bg-[#EFF6FF] w-16 h-16 rounded-2xl flex items-center justify-center mx-auto mb-4">
-                        <Plane className="w-8 h-8 text-[#3B82F6]" />
-                    </div>
-                    <h3 className="text-[#1F2937]">Travel</h3>
-                </div>
-            </div>
-        </div>
-    );
-}
+              );
+   }

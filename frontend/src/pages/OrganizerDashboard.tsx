@@ -40,6 +40,15 @@ export default function OrganizerDashboard() {
         location: updated.location,
         availableTickets: updated.availableTickets,
         eventDateMillis: updated.eventDate.seconds * 1000,
+        category: updated.category,
+        artist: updated.artist,
+        organization: updated.organization,
+        city: updated.city,
+        country: updated.country,
+        overview: updated.overview,
+        venue: updated.venue,
+        imageUrl: updated.imageUrl,
+        buyTicketsUrl: updated.buyTicketsUrl,
       });
       setEvents((prev) => prev.map((e) => (e.id === updated.id ? updated : e)));
       setEditingEvent(null);

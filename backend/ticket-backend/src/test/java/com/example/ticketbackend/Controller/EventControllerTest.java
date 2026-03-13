@@ -84,6 +84,7 @@ class EventControllerTest {
         createEventRequest.setAvailableTickets(50);
         createEventRequest.setEventDateMillis(1893456000000L);
         createEventRequest.setOrganizerId("organizer-123");
+        createEventRequest.setCategory("concert");
     }
 
     /**
@@ -137,7 +138,37 @@ class EventControllerTest {
 
         verify(eventService).createEvent(any(CreateEventRequest.class));
     }
+    @Test
+    void testCreateEvent_MissingCategory() throws Exception {
+        when(eventService.createEvent(any(CreateEventRequest.class)))
+                .thenThrow(new IllegalArgumentException("category is required."));
 
+        createEventRequest.setCategory("");
+
+        mockMvc.perform(post("/events/create")
+                        .with(csrf())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(createEventRequest)))
+                .andExpect(status().isBadRequest());
+
+        verify(eventService).createEvent(any(CreateEventRequest.class));
+    }
+
+    @Test
+    void testUpdateEvent_MissingCategory() throws Exception {
+        doThrow(new IllegalArgumentException("category is required."))
+                .when(eventService).updateEvent(eq("test-event-id"), any(CreateEventRequest.class));
+
+        createEventRequest.setCategory("");
+
+        mockMvc.perform(put("/events/test-event-id")
+                        .with(csrf())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(createEventRequest)))
+                .andExpect(status().isBadRequest());
+
+        verify(eventService).updateEvent(eq("test-event-id"), any(CreateEventRequest.class));
+    }
     @Test
     void testCreateEvent_ExecutionException() throws Exception {
         when(eventService.createEvent(any(CreateEventRequest.class)))
