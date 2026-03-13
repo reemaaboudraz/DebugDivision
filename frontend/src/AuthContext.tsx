@@ -1,4 +1,4 @@
-import { createContext, use, useContext, useEffect, useState, type ReactNode } from "react";
+import { createContext, useContext, useEffect, useState, type ReactNode } from "react";
 import { auth } from "./lib/firebaseConfig";
 import { onAuthStateChanged, type User } from "firebase/auth";
 import { authenticatedGet } from "./lib/api";
@@ -19,6 +19,7 @@ async function fetchUser(uid: string | null): Promise<UserProfile | null>{
         return null;
     }
     const res = await authenticatedGet(`api/auth/profile?uid=${uid}`);
+
     if (!res.ok) {
         throw new Error();
     } 
@@ -28,6 +29,26 @@ async function fetchUser(uid: string | null): Promise<UserProfile | null>{
         throw new Error();
     }
     return user;
+}
+
+function sleep(ms:number):Promise<void> {
+  return new Promise(resolve => setTimeout(resolve, ms))
+}
+
+async function fetchUserRetryOnErr(uid: string | null,  nbOfRetry: number): Promise<UserProfile | null>{
+
+    if(nbOfRetry <= 1){
+        return await fetchUser(uid); 
+    }
+
+    try{
+        const userProfile = await fetchUser(uid);
+        return userProfile;
+    } catch (err: any){
+        sleep(1000)
+        return fetchUserRetryOnErr(uid, nbOfRetry-1)
+    }
+
 }
 
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
@@ -40,12 +61,13 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     useEffect(() => {
 
         const unsubscribe = onAuthStateChanged(auth, async (user: User | null) => {
+            const numOfProfileFetchRetries = 5;
             try{
                 setLoading(true);
                 setError(null);
                 if(user?.uid){
                     setUID(user.uid);
-                    setUserProfile(await fetchUser(user.uid));
+                    setUserProfile(await fetchUserRetryOnErr(user.uid, numOfProfileFetchRetries));
                 } else {
                     setUID(null);
                     setUserProfile(null);

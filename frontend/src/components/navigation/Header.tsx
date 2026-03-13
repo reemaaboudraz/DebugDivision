@@ -3,7 +3,6 @@ import { Ticket, User } from "lucide-react";
 import { useAuth } from "@/AuthContext";
 import { Button } from "../ui/button";
 import { logout as logoutService } from "@/services/AuthService";
-import { authenticatedGet } from "@/lib/api";
 
 export default function Header() {
     
@@ -67,6 +66,17 @@ export default function Header() {
                         </div>
                         
                     </Link>
+                    <Link
+                        to="/events"
+                        className={`px-4 py-2 rounded-full transition ${
+                            isActive("/events")
+                                ? "bg-blue-100 text-blue-600"
+                                : "text-gray-600 hover:bg-blue-50"
+                        }`}
+                    >
+                        Events
+                    </Link>
+
 
                     <Button onClick={logout} className="px-4 py-2 rounded-full transition">
                         Logout
@@ -84,7 +94,6 @@ export default function Header() {
                     >
                         Login
                     </Link>
-
                     <Link
                         to="/signup"
                         className={`px-4 py-2 rounded-full transition ${

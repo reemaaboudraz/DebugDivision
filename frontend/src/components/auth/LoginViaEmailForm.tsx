@@ -14,7 +14,6 @@ export default function LoginViaEmail() {
     const handleSubmit = async (e: React.SubmitEvent) => {
         e.preventDefault();
         setHint("Loading...");
-
         try{
             await login(formData.email, formData.password)
             setHint("")

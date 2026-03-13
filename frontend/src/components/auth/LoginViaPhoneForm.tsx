@@ -47,7 +47,7 @@ export default function LoginViaPhone() {
     try {
       await confirmPhoneVerificationCode(code);
       setMessage("Login complete.");
-      navigate("/dashboard");
+      navigate("/");
     } catch (err: any) {
       setMessage(err?.message || "Verification failed.");
     }

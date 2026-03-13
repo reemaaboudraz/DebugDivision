@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useNavigate } from "react-router";
 import { User, Mail, Lock, CheckCircle } from "lucide-react";
+import { loginCustomToken } from "@/services/AuthService";
 
 export default function RegisterViaEmail() {
     const navigate = useNavigate();
@@ -39,10 +40,10 @@ export default function RegisterViaEmail() {
         }
 
         const data = await res.json();
+        const {customToken} = data;
+        loginCustomToken(customToken);
+        navigate("/");
         console.log("Registration success:", data);
-
-        // NEED TO REDIRECT TO PROFILE OR HOMEPAGE
-        navigate("/login");
       } catch (err: any) {
         alert(err?.message ?? "Registration failed");
       }

@@ -6,9 +6,11 @@ import {
 } from "@/services/AuthService";
 import { User, Phone, CheckCircle } from "lucide-react";
 import { authenticatedPost } from "@/lib/api";
+import { useNavigate } from "react-router-dom";
 
 export default function RegisterViaPhone() {
 
+    const navigate = useNavigate();
     const [formData, setFormData] = useState({
         fullName: "",
         phoneNumber: "",
@@ -65,8 +67,8 @@ export default function RegisterViaPhone() {
       if (!res.ok) {
         throw new Error(data.error || data.message || "Failed to create profile");
       }
-
       setMessage("Phone registration complete.");
+      navigate("/");
     } catch (err: any) {
       setMessage(err?.message || "Verification failed.");
     }

@@ -6,6 +6,7 @@ import type { TEvent } from "@/models/Event";
 import EventCard from "@/components/events/EventCard";
 import EditEventModal from "@/components/events/EditEventModal";
 import DeleteConfirmModal from "@/components/events/DeleteConfirmModal";
+import Profile from "@/components/auth/Profile";
 
 export default function OrganizerDashboard() {
   const [events, setEvents] = useState<TEvent[]>([]);
@@ -40,6 +41,15 @@ export default function OrganizerDashboard() {
         location: updated.location,
         availableTickets: updated.availableTickets,
         eventDateMillis: updated.eventDate.seconds * 1000,
+        category: updated.category,
+        artist: updated.artist,
+        organization: updated.organization,
+        city: updated.city,
+        country: updated.country,
+        overview: updated.overview,
+        venue: updated.venue,
+        imageUrl: updated.imageUrl,
+        buyTicketsUrl: updated.buyTicketsUrl,
       });
       setEvents((prev) => prev.map((e) => (e.id === updated.id ? updated : e)));
       setEditingEvent(null);
@@ -49,7 +59,10 @@ export default function OrganizerDashboard() {
   }
 
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
+    <>
+    
+    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <Profile/>
       <div className="bg-white rounded-3xl shadow-lg p-8 border border-gray-200">
         {/* Header */}
         <div className="flex items-center gap-4 mb-6">
@@ -128,5 +141,6 @@ export default function OrganizerDashboard() {
         />
       )}
     </div>
+    </>
   );
 }

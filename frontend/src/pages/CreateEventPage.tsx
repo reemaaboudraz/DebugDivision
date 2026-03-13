@@ -22,7 +22,15 @@ export default function CreateEventPage() {
   const [location, setLocation] = useState("");
   const [availableTickets, setAvailableTickets] = useState<number>(0);
   const [dateOnly, setDateOnly] = useState(""); 
-
+  const [category, setCategory] = useState<"movie" | "concert" | "sports" | "travel">("movie");
+  const [artist, setArtist] = useState("");
+  const [organization, setOrganization] = useState("");
+  const [city, setCity] = useState("");
+  const [country, setCountry] = useState("");
+  const [overview, setOverview] = useState("");
+  const [venue, setVenue] = useState("");
+  const [imageUrl, setImageUrl] = useState("");
+  const [buyTicketsUrl, setBuyTicketsUrl] = useState("");
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
     setError(null);
@@ -41,6 +49,15 @@ export default function CreateEventPage() {
       availableTickets,
       eventDateMillis,
       organizerId: "temp-organizer", // TODO: replace when auth exists
+      category,
+      artist: artist.trim(),
+      organization: organization.trim(),
+      city: city.trim(),
+      country: country.trim(),
+      overview: overview.trim(),
+      venue: venue.trim(),
+      imageUrl: imageUrl.trim(),
+      buyTicketsUrl: buyTicketsUrl.trim(),
     };
 
     setSubmitting(true);
@@ -130,6 +147,105 @@ export default function CreateEventPage() {
               onChange={(e) => setAvailableTickets(Number(e.target.value))}
             />
           </div>
+        </div>
+<div>
+          <label className="block text-sm text-[#1F2937] mb-2">Category</label>
+          <select
+            className="w-full rounded-xl border border-gray-200 px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-200"
+            value={category}
+            onChange={(e) =>
+              setCategory(e.target.value as "movie" | "concert" | "sports" | "travel")
+            }
+          >
+            <option value="movie">Movie</option>
+            <option value="concert">Concert</option>
+            <option value="sports">Sports</option>
+            <option value="travel">Travel</option>
+          </select>
+        </div>
+
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+          <div>
+            <label className="block text-sm text-[#1F2937] mb-2">Artist</label>
+            <input
+              className="w-full rounded-xl border border-gray-200 px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-200"
+              value={artist}
+              onChange={(e) => setArtist(e.target.value)}
+              placeholder="e.g. Taylor Swift"
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm text-[#1F2937] mb-2">Organization</label>
+            <input
+              className="w-full rounded-xl border border-gray-200 px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-200"
+              value={organization}
+              onChange={(e) => setOrganization(e.target.value)}
+              placeholder="e.g. Evenko"
+            />
+          </div>
+        </div>
+
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+          <div>
+            <label className="block text-sm text-[#1F2937] mb-2">City</label>
+            <input
+              className="w-full rounded-xl border border-gray-200 px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-200"
+              value={city}
+              onChange={(e) => setCity(e.target.value)}
+              placeholder="e.g. Montreal"
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm text-[#1F2937] mb-2">Country</label>
+            <input
+              className="w-full rounded-xl border border-gray-200 px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-200"
+              value={country}
+              onChange={(e) => setCountry(e.target.value)}
+              placeholder="e.g. Canada"
+            />
+          </div>
+        </div>
+
+        <div>
+          <label className="block text-sm text-[#1F2937] mb-2">Venue</label>
+          <input
+            className="w-full rounded-xl border border-gray-200 px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-200"
+            value={venue}
+            onChange={(e) => setVenue(e.target.value)}
+            placeholder="e.g. Bell Centre"
+          />
+        </div>
+
+        <div>
+          <label className="block text-sm text-[#1F2937] mb-2">Image URL</label>
+          <input
+            className="w-full rounded-xl border border-gray-200 px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-200"
+            value={imageUrl}
+            onChange={(e) => setImageUrl(e.target.value)}
+            placeholder="https://..."
+          />
+        </div>
+
+        <div>
+          <label className="block text-sm text-[#1F2937] mb-2">Buy Tickets URL</label>
+          <input
+            className="w-full rounded-xl border border-gray-200 px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-200"
+            value={buyTicketsUrl}
+            onChange={(e) => setBuyTicketsUrl(e.target.value)}
+            placeholder="https://..."
+          />
+        </div>
+
+        <div>
+          <label className="block text-sm text-[#1F2937] mb-2">Overview</label>
+          <textarea
+            className="w-full rounded-xl border border-gray-200 px-4 py-3 min-h-32 focus:outline-none focus:ring-2 focus:ring-blue-200"
+            value={overview}
+            onChange={(e) => setOverview(e.target.value)}
+            placeholder="Describe the event..."
+          />
         </div>
 
         <div className="flex flex-wrap gap-4">

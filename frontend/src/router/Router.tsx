@@ -7,7 +7,9 @@ import Login from "@/pages/Login";
 import Signup from "@/pages/Signup";
 import OrganizerDashboard from "@/pages/OrganizerDashboard";
 import CreateEventPage from "@/pages/CreateEventPage";
+import EventsPage from "@/pages/EventsPage";
 import ProtectedRoute from "./ProtectedRoute";
+import CustomerDashboard from "@/pages/CustomerDashboard";
 import { useAuth } from "@/AuthContext";
 import { Role } from "@/models/User";
 
@@ -18,7 +20,8 @@ function DashboardRedirect(){
     if (userProfile?.role == Role.organizer)
         return <Navigate to="/organizer/dashboard" replace/>;
     if (userProfile?.role == Role.customer)
-        return <Navigate to="/404" replace/>;
+        return <Navigate to="/user/dashboard" replace/>;
+    else return <Navigate to="/404" replace/>;
 }
 
 
@@ -63,7 +66,23 @@ const router = createBrowserRouter([
                         <OrganizerDashboard/>
                     </ProtectedRoute>
                 )
-            }
+            },
+            {
+                path: "/events",
+                element: (
+                     <ProtectedRoute role={"CUSTOMER"} errorMessage="Only Customers May Access This Page">
+                        <EventsPage/>
+                    </ProtectedRoute>
+                )
+             },
+             {
+                path: "user/dashboard",
+                element: (
+                    <ProtectedRoute role={"CUSTOMER"} errorMessage="Only Cutomers May Access This Page">
+                        <CustomerDashboard/>
+                    </ProtectedRoute>
+                )
+            },
         ]
     },
 ]);
