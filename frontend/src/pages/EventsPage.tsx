@@ -223,10 +223,10 @@ export default function EventsPage() {
                   </div>
                 </div>
 
-                <div className="flex gap-3 mt-5 flex-wrap">
+                <div className="grid grid-cols-3 gap-2 mt-5">
                   <button
                     onClick={() => setSelectedEvent(event)}
-                    className="px-4 py-2 bg-[#3B82F6] text-white rounded-full hover:bg-[#2563EB] transition-all"
+                    className="py-2 bg-[#3B82F6] text-white rounded-full hover:bg-[#2563EB] transition-all text-sm"
                   >
                     View More
                   </button>
@@ -234,25 +234,28 @@ export default function EventsPage() {
                   <button
                     onClick={() => {
                       if (!isLoggedIn) { navigate("/login"); return; }
-                      if (!isOrganizer) navigate(`/reservation/${event.id}`);
+                      if (!isOrganizer && event.availableTickets > 0) navigate(`/reservation/${event.id}`);
                     }}
-                    disabled={isOrganizer}
+                    disabled={isOrganizer || event.availableTickets === 0}
                     title={
+                      event.availableTickets === 0 ? "This event is sold out" :
                       !isLoggedIn ? "Login to buy tickets" :
                       isOrganizer ? "Organizers cannot buy tickets" : ""
                     }
-                    className={`px-4 py-2 rounded-full transition-all ${
-                      isLoggedIn && !isOrganizer
-                        ? "bg-[#EC4899] text-white hover:bg-[#DB2777]"
-                        : "bg-gray-100 text-gray-400 cursor-not-allowed"
+                    className={`py-2 rounded-full transition-all text-sm ${
+                      event.availableTickets === 0
+                        ? "bg-red-100 text-red-400 cursor-not-allowed"
+                        : isLoggedIn && !isOrganizer
+                          ? "bg-[#EC4899] text-white hover:bg-[#DB2777]"
+                          : "bg-gray-100 text-gray-400 cursor-not-allowed"
                     }`}
                   >
-                    Buy Tickets
+                    {event.availableTickets === 0 ? "Sold Out" : "Buy Tickets"}
                   </button>
 
                   <button
                     onClick={() => toggleFavorite(event.id)}
-                    className={`px-4 py-2 rounded-full transition-all flex items-center gap-2 ${
+                    className={`py-2 rounded-full transition-all flex items-center justify-center gap-1 text-sm ${
                       favorites.includes(event.id)
                         ? "bg-red-50 text-red-600"
                         : "bg-gray-100 text-[#1F2937]"
@@ -325,20 +328,23 @@ export default function EventsPage() {
                 <button
                   onClick={() => {
                     if (!isLoggedIn) { navigate("/login"); return; }
-                    if (!isOrganizer) navigate(`/reservation/${selectedEvent.id}`);
+                    if (!isOrganizer && selectedEvent.availableTickets > 0) navigate(`/reservation/${selectedEvent.id}`);
                   }}
-                  disabled={isOrganizer}
+                  disabled={isOrganizer || selectedEvent.availableTickets === 0}
                   title={
+                    selectedEvent.availableTickets === 0 ? "This event is sold out" :
                     !isLoggedIn ? "Login to buy tickets" :
                     isOrganizer ? "Organizers cannot buy tickets" : ""
                   }
                   className={`px-5 py-3 rounded-full ${
-                    isLoggedIn && !isOrganizer
-                      ? "bg-[#EC4899] text-white hover:bg-[#DB2777]"
-                      : "bg-gray-100 text-gray-400 cursor-not-allowed"
+                    selectedEvent.availableTickets === 0
+                      ? "bg-red-100 text-red-400 cursor-not-allowed"
+                      : isLoggedIn && !isOrganizer
+                        ? "bg-[#EC4899] text-white hover:bg-[#DB2777]"
+                        : "bg-gray-100 text-gray-400 cursor-not-allowed"
                   }`}
                 >
-                  Buy Tickets
+                  {selectedEvent.availableTickets === 0 ? "Sold Out" : "Buy Tickets"}
                 </button>
 
                 <Link
