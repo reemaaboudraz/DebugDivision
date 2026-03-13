@@ -45,7 +45,7 @@ async function fetchUserRetryOnErr(uid: string | null,  nbOfRetry: number): Prom
         const userProfile = await fetchUser(uid);
         return userProfile;
     } catch (err: any){
-        sleep(1000)
+         await sleep(1000)
         return fetchUserRetryOnErr(uid, nbOfRetry-1)
     }
 
@@ -61,12 +61,13 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     useEffect(() => {
 
         const unsubscribe = onAuthStateChanged(auth, async (user: User | null) => {
-            const numOfProfileFetchRetries = 5;
+            const numOfProfileFetchRetries = 3;
             try{
                 setLoading(true);
                 setError(null);
                 if(user?.uid){
                     setUID(user.uid);
+                    await user.getIdToken();
                     setUserProfile(await fetchUserRetryOnErr(user.uid, numOfProfileFetchRetries));
                 } else {
                     setUID(null);

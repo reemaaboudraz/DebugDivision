@@ -17,9 +17,8 @@ export default function ProtectedRoute(
     :protectedRouteProps){
 
     const {userProfile, authError, loading} = useAuth();
-
     if (loading){
-        return <Spinner className="min-h-100"></Spinner>
+        return <Spinner className="w-50 h-50"></Spinner>
     } else if (authError){
         return (
             <div className="text-2xl">
