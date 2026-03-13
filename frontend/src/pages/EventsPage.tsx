@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { Link, useSearchParams } from "react-router-dom";
+import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { Calendar, Heart, MapPin, Ticket, Music, Film, Trophy, Plane } from "lucide-react";
 import { getAllEvents } from "@/services/events";
 import type { EventCategory, TEvent } from "@/models/Event";
@@ -33,9 +33,22 @@ function setFavoriteIds(ids: string[]) {
   localStorage.setItem("favoriteEvents", JSON.stringify(ids));
 }
 
+function getCurrentUser(): { email: string } | null {
+  try {
+    return JSON.parse(localStorage.getItem("tixy_user") ?? "null");
+  } catch {
+    return null;
+  }
+}
+
 export default function EventsPage() {
+  const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
   const initialCategory = (searchParams.get("category") as EventCategory) || "movie";
+
+  const currentUser = getCurrentUser();
+  const isLoggedIn = currentUser !== null;
+  const isOrganizer = isLoggedIn && currentUser.email.toLowerCase().endsWith(".org");
 
   const [activeCategory, setActiveCategory] = useState<EventCategory>(initialCategory);
   const [events, setEvents] = useState<TEvent[]>([]);
@@ -218,18 +231,24 @@ export default function EventsPage() {
                     View More
                   </button>
 
-                  <a
-                    href={event.buyTicketsUrl || "#"}
-                    target="_blank"
-                    rel="noreferrer"
+                  <button
+                    onClick={() => {
+                      if (!isLoggedIn) { navigate("/login"); return; }
+                      if (!isOrganizer) navigate(`/reservation/${event.id}`);
+                    }}
+                    disabled={isOrganizer}
+                    title={
+                      !isLoggedIn ? "Login to buy tickets" :
+                      isOrganizer ? "Organizers cannot buy tickets" : ""
+                    }
                     className={`px-4 py-2 rounded-full transition-all ${
-                      event.buyTicketsUrl
+                      isLoggedIn && !isOrganizer
                         ? "bg-[#EC4899] text-white hover:bg-[#DB2777]"
-                        : "bg-gray-100 text-gray-400 pointer-events-none"
+                        : "bg-gray-100 text-gray-400 cursor-not-allowed"
                     }`}
                   >
                     Buy Tickets
-                  </a>
+                  </button>
 
                   <button
                     onClick={() => toggleFavorite(event.id)}
@@ -303,18 +322,24 @@ export default function EventsPage() {
                   {favorites.includes(selectedEvent.id) ? "Remove Favorite" : "Save to Favorite"}
                 </button>
 
-                <a
-                  href={selectedEvent.buyTicketsUrl || "#"}
-                  target="_blank"
-                  rel="noreferrer"
+                <button
+                  onClick={() => {
+                    if (!isLoggedIn) { navigate("/login"); return; }
+                    if (!isOrganizer) navigate(`/reservation/${selectedEvent.id}`);
+                  }}
+                  disabled={isOrganizer}
+                  title={
+                    !isLoggedIn ? "Login to buy tickets" :
+                    isOrganizer ? "Organizers cannot buy tickets" : ""
+                  }
                   className={`px-5 py-3 rounded-full ${
-                    selectedEvent.buyTicketsUrl
+                    isLoggedIn && !isOrganizer
                       ? "bg-[#EC4899] text-white hover:bg-[#DB2777]"
-                      : "bg-gray-100 text-gray-400 pointer-events-none"
+                      : "bg-gray-100 text-gray-400 cursor-not-allowed"
                   }`}
                 >
                   Buy Tickets
-                </a>
+                </button>
 
                 <Link
                   to="/"
