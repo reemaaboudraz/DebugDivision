@@ -26,8 +26,8 @@ export default function LoginViaEmail() {
     return (
             <form onSubmit={handleSubmit} className="space-y-5">
                 <div>
-                    <label htmlFor="emailOrPhone" className="block text-sm text-[#1F2937] mb-2">
-                        Email or Phone Number
+                    <label htmlFor="email" className="block text-sm text-[#1F2937] mb-2">
+                        Email
                     </label>
                     <div className="relative">
                         <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
@@ -41,7 +41,7 @@ export default function LoginViaEmail() {
                                 setFormData({ ...formData, email: e.target.value })
                             }
                             className="w-full pl-12 pr-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#3B82F6] focus:border-transparent bg-white text-[#1F2937] placeholder:text-[#6B7280]"
-                            placeholder="Enter your email or phone"
+                            placeholder="Enter your email"
                             required
                         />
                     </div>
