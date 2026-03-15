@@ -8,6 +8,7 @@ import Signup from "@/pages/Signup";
 import OrganizerDashboard from "@/pages/OrganizerDashboard";
 import CreateEventPage from "@/pages/CreateEventPage";
 import EventsPage from "@/pages/EventsPage";
+import ReservationPage from "@/pages/ReservationPage";
 
 const router = createBrowserRouter([
     {
@@ -42,7 +43,11 @@ const router = createBrowserRouter([
             {
                 path: "/events",
                 element: <EventsPage />,
-             },
+            },
+            {
+                path: "/reservation/:eventId",
+                element: <ReservationPage />,
+            },
         ]
     },
 ]);

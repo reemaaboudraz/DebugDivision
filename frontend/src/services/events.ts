@@ -23,6 +23,17 @@ export async function createEvent(
   return res.json();
 }
 
+export async function getEventById(id: string): Promise<TEvent> {
+  const res = await fetch(`${API_BASE}/events/${id}`);
+
+  if (!res.ok) {
+    const text = await res.text().catch(() => "");
+    throw new Error(text || `Failed to fetch event (${res.status})`);
+  }
+
+  return res.json();
+}
+
 export async function getAllEvents(): Promise<TEvent[]> {
   const res = await fetch(`${API_BASE}/events`);
 
