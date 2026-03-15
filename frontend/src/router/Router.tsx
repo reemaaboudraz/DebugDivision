@@ -9,6 +9,7 @@ import OrganizerDashboard from "@/pages/OrganizerDashboard";
 import CreateEventPage from "@/pages/CreateEventPage";
 import EventsPage from "@/pages/EventsPage";
 import ProtectedRoute from "./ProtectedRoute";
+import ReservationPage from "@/pages/ReservationPage";
 import CustomerDashboard from "@/pages/CustomerDashboard";
 import { useAuth } from "@/AuthContext";
 import { Role } from "@/models/User";
@@ -81,6 +82,14 @@ const router = createBrowserRouter([
                         <CustomerDashboard/>
                     </ProtectedRoute>
                 )
+            },
+            {
+                path: "/reservation/:eventId",
+                element: (
+                    <ProtectedRoute role={"CUSTOMER"} errorMessage="Only Cutomers May Access This Page">
+                        <ReservationPage />
+                    </ProtectedRoute>
+                ),
             },
         ]
     },
