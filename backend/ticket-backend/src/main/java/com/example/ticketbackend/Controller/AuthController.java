@@ -111,6 +111,11 @@ public class AuthController {
     public ResponseEntity<?> getProfile(
             @RequestParam String uid,
             @RequestHeader(value = "Authorization", required = false) String authHeader) {
+
+        System.out.println("PROFILE ENDPOINT HIT");
+        System.out.println("UID: " + uid);
+        System.out.println("AUTH HEADER: " + authHeader);
+
         try {
             if (authHeader == null || !authHeader.startsWith("Bearer ")) {
                 return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
@@ -128,7 +133,7 @@ public class AuthController {
                 return ResponseEntity.status(HttpStatus.NOT_FOUND)
                         .body(new AuthResponseDTO("User not found"));
             }
-
+            System.out.println(user);
             return ResponseEntity.ok(user);
 
         } catch (ExecutionException | InterruptedException | FirebaseAuthException e) {

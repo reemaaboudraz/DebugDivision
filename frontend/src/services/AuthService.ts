@@ -14,7 +14,7 @@ async function loginCustomToken(token: string):Promise<void>{
     await signInWithCustomToken(auth, token);
   } 
   catch(error: any) {
-    throw new Error("Login failed, firebase authentication failure");
+    throw new Error("Login failed");
   }
 }
 
@@ -23,7 +23,7 @@ async function login(email: string, password: string){
     await signInWithEmailAndPassword(auth, email, password);
   } 
   catch(error: any) {
-    throw new Error("Login failed, firebase authentication failure");
+    throw new Error("login failed");
   }
 }
 
@@ -31,7 +31,7 @@ async function logout(): Promise<void> {
   try {
     await signOut(auth);
   } catch (error: any) {
-    throw new Error("Logout failed, firebase authentication failure");
+    throw new Error("Logout failed");
   }
 }
 

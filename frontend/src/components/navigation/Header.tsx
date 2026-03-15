@@ -3,10 +3,12 @@ import { Ticket, User } from "lucide-react";
 import { useAuth } from "@/AuthContext";
 import { Button } from "../ui/button";
 import { logout as logoutService } from "@/services/AuthService";
+import { Role } from "@/models/User";
 
 export default function Header() {
     
-    const {uid} = useAuth();
+    const {uid, userProfile} = useAuth();
+    const role = userProfile?.role;
     const location = useLocation();
     const navigate = useNavigate();
 
@@ -65,7 +67,8 @@ export default function Header() {
                             Dashboard
                         </div>
                         
-                    </Link>
+                    </Link> 
+                    {role===Role.customer &&
                     <Link
                         to="/events"
                         className={`px-4 py-2 rounded-full transition ${
@@ -76,8 +79,7 @@ export default function Header() {
                     >
                         Events
                     </Link>
-
-
+                    }
                     <Button onClick={logout} className="px-4 py-2 rounded-full transition">
                         Logout
                     </Button>

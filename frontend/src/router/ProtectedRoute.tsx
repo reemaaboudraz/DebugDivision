@@ -16,12 +16,16 @@ export default function ProtectedRoute(
     {children, role, fallbackRoute, errorMessage="You do not have acess to this page"}
     :protectedRouteProps){
 
-    const {userProfile, authError, loading} = useAuth();
+    const {loading} = useAuth();
+    const {authError} = useAuth();
+    const {userProfile} = useAuth();
+
+    
     if (loading){
         return <Spinner className="w-50 h-50"></Spinner>
     } else if (authError){
         return (
-            <div className="text-2xl">
+            <div className="text-2xl flex items-center max-w-100%">
                 <h1>{authError}</h1>
             </div>
         )

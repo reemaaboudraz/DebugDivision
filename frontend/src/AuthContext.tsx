@@ -18,13 +18,16 @@ async function fetchUser(uid: string | null): Promise<UserProfile | null>{
     if(!uid){
         return null;
     }
-    const res = await authenticatedGet(`api/auth/profile?uid=${uid}`);
+    const res = await authenticatedGet(`/api/auth/profile?uid=${uid}`);
 
     if (!res.ok) {
         throw new Error();
-    } 
+    }
+
     const data = await res.json();
-    const user: UserProfile = { ...data };
+    console.log(data);
+
+    const user: UserProfile = { ...data } as UserProfile;
     if(!user.name || !user.role){
         throw new Error();
     }
@@ -61,13 +64,12 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     useEffect(() => {
 
         const unsubscribe = onAuthStateChanged(auth, async (user: User | null) => {
-            const numOfProfileFetchRetries = 3;
+            const numOfProfileFetchRetries = 10;
             try{
                 setLoading(true);
                 setError(null);
                 if(user?.uid){
                     setUID(user.uid);
-                    await user.getIdToken();
                     setUserProfile(await fetchUserRetryOnErr(user.uid, numOfProfileFetchRetries));
                 } else {
                     setUID(null);

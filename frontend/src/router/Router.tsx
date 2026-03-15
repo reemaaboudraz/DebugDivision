@@ -24,7 +24,6 @@ function DashboardRedirect(){
     else return <Navigate to="/404" replace/>;
 }
 
-
 const router = createBrowserRouter([
     {
         path:"/",
