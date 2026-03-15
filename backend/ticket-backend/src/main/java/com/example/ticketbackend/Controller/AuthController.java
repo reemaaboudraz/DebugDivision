@@ -4,6 +4,7 @@ import com.example.ticketbackend.DTO.Request.RegisterRequestDTO;
 import com.example.ticketbackend.DTO.Response.AuthResponseDTO;
 import com.example.ticketbackend.Model.User;
 import com.example.ticketbackend.Service.AuthService;
+import com.google.firebase.ErrorCode;
 import com.google.firebase.auth.FirebaseAuthException;
 import com.google.firebase.auth.FirebaseToken;
 import org.springframework.http.HttpStatus;
@@ -66,7 +67,7 @@ public class AuthController {
      */
     @PostMapping("/register-phone")
     public ResponseEntity<?> registerWithPhone(
-            @RequestHeader("Authorization") String authHeader,
+            @RequestHeader(value = "Authorization", required = false) String authHeader,
             @RequestBody RegisterRequestDTO request) {
         try {
 
@@ -80,7 +81,6 @@ public class AuthController {
 
             String uid = decodedToken.getUid();
 
-            // Register user
             User user = authService.registerUserPhone(
                     uid,
                     request.getPhoneNumber(),
@@ -90,6 +90,10 @@ public class AuthController {
             return ResponseEntity.status(HttpStatus.CREATED).body(user);
 
         } catch (FirebaseAuthException e) {
+            if (e.getErrorCode() == ErrorCode.UNAUTHENTICATED) {
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                        .body(new AuthResponseDTO("Invalid or expired token"));
+            }
             return ResponseEntity.status(HttpStatus.BAD_REQUEST)
                     .body(new AuthResponseDTO("Registration failed: " + e.getMessage()));
         } catch (ExecutionException | InterruptedException e) {
@@ -106,7 +110,7 @@ public class AuthController {
     @GetMapping("/profile")
     public ResponseEntity<?> getProfile(
             @RequestParam String uid,
-            @RequestHeader("Authorization") String authHeader) {
+            @RequestHeader(value = "Authorization", required = false) String authHeader) {
         try {
             if (authHeader == null || !authHeader.startsWith("Bearer ")) {
                 return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
