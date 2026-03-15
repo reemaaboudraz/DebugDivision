@@ -1,0 +1,9 @@
+#!/bin/sh
+
+(
+cd frontend || exit
+
+npx concurrently -k -n BACKEND,FRONTEND \
+  "cd ../backend/ticket-backend && ./mvnw spring-boot:run" \
+  "npm run dev"
+)

@@ -4,7 +4,9 @@ import com.example.ticketbackend.DTO.Request.RegisterRequestDTO;
 import com.example.ticketbackend.DTO.Response.AuthResponseDTO;
 import com.example.ticketbackend.Model.User;
 import com.example.ticketbackend.Service.AuthService;
+import com.google.firebase.ErrorCode;
 import com.google.firebase.auth.FirebaseAuthException;
+import com.google.firebase.auth.FirebaseToken;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -60,15 +62,68 @@ public class AuthController {
     }
 
     /**
+     * create a new user in firestore
+     * POST /api/auth/register
+     */
+    @PostMapping("/register-phone")
+    public ResponseEntity<?> registerWithPhone(
+            @RequestHeader(value = "Authorization", required = false) String authHeader,
+            @RequestBody RegisterRequestDTO request) {
+        try {
+
+            if (authHeader == null || !authHeader.startsWith("Bearer ")) {
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                        .body(new AuthResponseDTO("Missing or invalid Authorization header"));
+            }
+
+            String idToken = authHeader.substring(7);
+            FirebaseToken decodedToken = authService.verifyIdToken(idToken);
+
+            String uid = decodedToken.getUid();
+
+            User user = authService.registerUserPhone(
+                    uid,
+                    request.getPhoneNumber(),
+                    request.getName(),
+                    request.getRole()
+            );
+            return ResponseEntity.status(HttpStatus.CREATED).body(user);
+
+        } catch (FirebaseAuthException e) {
+            if (e.getErrorCode() == ErrorCode.UNAUTHENTICATED) {
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                        .body(new AuthResponseDTO("Invalid or expired token"));
+            }
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body(new AuthResponseDTO("Registration failed: " + e.getMessage()));
+        } catch (ExecutionException | InterruptedException e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(new AuthResponseDTO("Server error: " + e.getMessage()));
+        }
+    }
+
+    /**
      * Get user profile by UID
-     * Later when we do frontend authentication, we will use token
+     * verified with auth token, for security
      * GET /api/auth/profile?uid=xxx
      */
     @GetMapping("/profile")
-    public ResponseEntity<?> getProfile(@RequestParam String uid) {
+    public ResponseEntity<?> getProfile(
+            @RequestParam String uid,
+            @RequestHeader(value = "Authorization", required = false) String authHeader) {
         try {
-            User user = authService.getUserByUid(uid);
+            if (authHeader == null || !authHeader.startsWith("Bearer ")) {
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                        .body(new AuthResponseDTO("Missing or invalid Authorization header"));
+            }
 
+            String idToken = authHeader.substring(7);
+            if(!authService.verifyUidWithToken(uid, idToken)) {
+                return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                        .body(new AuthResponseDTO("Forbidden: UID does not match authenticated user"));
+            }
+
+            User user = authService.getUserByUid(uid);
             if (user == null) {
                 return ResponseEntity.status(HttpStatus.NOT_FOUND)
                         .body(new AuthResponseDTO("User not found"));
@@ -76,7 +131,7 @@ public class AuthController {
 
             return ResponseEntity.ok(user);
 
-        } catch (ExecutionException | InterruptedException e) {
+        } catch (ExecutionException | InterruptedException | FirebaseAuthException e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body(new AuthResponseDTO("Server error: " + e.getMessage()));
         }
