@@ -8,7 +8,7 @@ export default function Profile(){
     const name = userProfile?.name;
     const emailOrPhone = userProfile?.email ?? userProfile?.phone;
     const [firstName, lastName] = name?.split(" ") ?? [];
-    const initials = firstName?.charAt(0).toUpperCase() + lastName?.charAt(0).toUpperCase()
+    const initials = (firstName?.charAt(0).toUpperCase() ?? "") + (lastName?.charAt(0).toUpperCase() ?? "");
 
     return (
         <div className="flex justify-between px-6 py-5
