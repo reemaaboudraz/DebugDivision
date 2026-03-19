@@ -25,11 +25,18 @@ export default function RegisterViaPhone() {
   }, []);
 
 
-    const formatPhoneNumber= (phoneNumber: string):string => {
-        phoneNumber.replaceAll(" ", "");
-        phoneNumber.replaceAll("-", "");
-        phoneNumber.replaceAll("(", "");
-        phoneNumber.replaceAll(")", "");
+  const formatPhoneNumber= (phoneNumber: string):string => {
+        phoneNumber = phoneNumber.replaceAll(" ", "");
+        phoneNumber = phoneNumber.replaceAll("-", "");
+        phoneNumber = phoneNumber.replaceAll("(", "");
+        phoneNumber = phoneNumber.replaceAll(")", "");
+        if(phoneNumber.length == 12 && phoneNumber.charAt(0) == '+'){
+          return phoneNumber;
+        }
+        if(phoneNumber.length == 11 && !isNaN(Number(phoneNumber[0]))){
+          phoneNumber = "+"+phoneNumber;
+          return phoneNumber;
+        }
         phoneNumber = "+1"+phoneNumber;
         return phoneNumber;
     }
