@@ -1,17 +1,18 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
-import { Calendar, Heart, MapPin, Ticket, Music, Film, Trophy, Plane } from "lucide-react";
+import { Calendar, Heart, MapPin, Ticket, Music, Film, Trophy, Plane, Grid3X3 } from "lucide-react";
 import { getAllEvents } from "@/services/events";
 import type { EventCategory, TEvent } from "@/models/Event";
 import { useAuth } from "@/AuthContext";
 import { Role, type UserProfile } from "@/models/User";
 
-const categories: { key: EventCategory; label: string; icon: JSX.Element }[] = [
-  { key: "movie", label: "Movies", icon: <Film className="w-4 h-4" /> },
-  { key: "concert", label: "Concerts", icon: <Music className="w-4 h-4" /> },
-  { key: "sports", label: "Sports", icon: <Trophy className="w-4 h-4" /> },
-  { key: "travel", label: "Travel", icon: <Plane className="w-4 h-4" /> },
-];
+ const categories: { key: "all" | EventCategory; label: string; icon: JSX.Element }[] = [
+   { key: "all", label: "All", icon: <Grid3X3 className="w-4 h-4" /> },
+   { key: "movie", label: "Movies", icon: <Film className="w-4 h-4" /> },
+   { key: "concert", label: "Concerts", icon: <Music className="w-4 h-4" /> },
+   { key: "sports", label: "Sports", icon: <Trophy className="w-4 h-4" /> },
+   { key: "travel", label: "Travel", icon: <Plane className="w-4 h-4" /> },
+ ];
 
 function formatEventDate(event: TEvent) {
   return new Date(event.eventDate.seconds * 1000).toLocaleString();
@@ -45,13 +46,13 @@ export default function EventsPage() {
   const {uid} = useAuth();
 
   const [searchParams, setSearchParams] = useSearchParams();
-  const initialCategory = (searchParams.get("category") as EventCategory) || "movie";
+  const initialCategory = ((searchParams.get("category") as "all" | EventCategory) || "all");
 
   const currentUser = getCurrentUser();
   const isLoggedIn = !!uid;
   const isOrganizer = currentUser?.role == Role.organizer;
   
-  const [activeCategory, setActiveCategory] = useState<EventCategory>(initialCategory);
+  const [activeCategory, setActiveCategory] = useState<"all" | EventCategory>(initialCategory);
   const [events, setEvents] = useState<TEvent[]>([]);
   const [selectedEvent, setSelectedEvent] = useState<TEvent | null>(null);
   const [loading, setLoading] = useState(true);
@@ -86,7 +87,9 @@ export default function EventsPage() {
 
   const filteredEvents = useMemo(() => {
     return events.filter((event) => {
-      const categoryMatch = (event.category || "").toLowerCase() === activeCategory;
+
+      const categoryMatch =
+         activeCategory === "all" || (event.category || "").toLowerCase() === activeCategory;
       const dateMatch = matchesDateFilter(event, dateFilter);
       const artistMatch = !artistFilter || (event.artist ?? "").toLowerCase().includes(artistFilter.toLowerCase());
       const orgMatch = !organizationFilter || (event.organization ?? "").toLowerCase().includes(organizationFilter.toLowerCase());

@@ -7,9 +7,17 @@ import ReservationPage from "./ReservationPage";
 
 const mockNavigate = vi.fn();
 
+const { mockUseAuth } = vi.hoisted(() => ({
+  mockUseAuth: vi.fn(),
+}));
+
 vi.mock("react-router-dom", () => ({
   useNavigate: () => mockNavigate,
   useParams: () => ({ eventId: "event-1" }),
+}));
+
+vi.mock("@/AuthContext", () => ({
+  useAuth: () => mockUseAuth(),
 }));
 
 vi.mock("@/services/events");
@@ -49,10 +57,19 @@ const mockReservationResponse: ReservationResponse = {
 
 function setUser(email = "john@example.com") {
   localStorage.setItem("tixy_user", JSON.stringify({ email }));
+  mockUseAuth.mockReturnValue({
+    uid: "user-1",
+    userProfile: { email },
+  });
 }
+
 
 function clearUser() {
   localStorage.removeItem("tixy_user");
+  mockUseAuth.mockReturnValue({
+    uid: null,
+    userProfile: null,
+  });
 }
 
 // --- tests ---

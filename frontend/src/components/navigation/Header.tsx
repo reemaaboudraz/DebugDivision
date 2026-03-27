@@ -11,6 +11,7 @@ export default function Header() {
     const role = userProfile?.role;
     const location = useLocation();
     const navigate = useNavigate();
+    if (!uid) return null;
 
     const isActive = (path: string) => {
         if (path === "/") return location.pathname === "/";
