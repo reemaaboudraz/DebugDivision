@@ -3,6 +3,8 @@ import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { Calendar, Heart, MapPin, Ticket, Music, Film, Trophy, Plane } from "lucide-react";
 import { getAllEvents } from "@/services/events";
 import type { EventCategory, TEvent } from "@/models/Event";
+import { useAuth } from "@/AuthContext";
+import { Role, type UserProfile } from "@/models/User";
 
 const categories: { key: EventCategory; label: string; icon: JSX.Element }[] = [
   { key: "movie", label: "Movies", icon: <Film className="w-4 h-4" /> },
@@ -33,23 +35,22 @@ function setFavoriteIds(ids: string[]) {
   localStorage.setItem("favoriteEvents", JSON.stringify(ids));
 }
 
-function getCurrentUser(): { email: string } | null {
-  try {
-    return JSON.parse(localStorage.getItem("tixy_user") ?? "null");
-  } catch {
-    return null;
-  }
+function getCurrentUser(): UserProfile | null {
+  const {userProfile} = useAuth();
+  return userProfile;
 }
 
 export default function EventsPage() {
   const navigate = useNavigate();
+  const {uid} = useAuth();
+
   const [searchParams, setSearchParams] = useSearchParams();
   const initialCategory = (searchParams.get("category") as EventCategory) || "movie";
 
   const currentUser = getCurrentUser();
-  const isLoggedIn = currentUser !== null;
-  const isOrganizer = isLoggedIn && currentUser.email.toLowerCase().endsWith(".org");
-
+  const isLoggedIn = !!uid;
+  const isOrganizer = currentUser?.role == Role.organizer;
+  
   const [activeCategory, setActiveCategory] = useState<EventCategory>(initialCategory);
   const [events, setEvents] = useState<TEvent[]>([]);
   const [selectedEvent, setSelectedEvent] = useState<TEvent | null>(null);

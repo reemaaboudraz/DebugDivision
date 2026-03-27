@@ -3,14 +3,13 @@ import { useNavigate, useParams } from "react-router-dom";
 import { Calendar, MapPin, Ticket } from "lucide-react";
 import { getEventById } from "@/services/events";
 import { createReservation } from "@/services/reservations";
+import { useAuth } from "@/AuthContext";
+import { type UserProfile } from "@/models/User";
 import type { TEvent } from "@/models/Event";
 
-function getCurrentUser(): { email: string } | null {
-  try {
-    return JSON.parse(localStorage.getItem("tixy_user") ?? "null");
-  } catch {
-    return null;
-  }
+function getCurrentUser(): UserProfile | null {
+  const {userProfile} = useAuth();
+  return userProfile;
 }
 
 function formatEventDate(event: TEvent) {
@@ -22,12 +21,13 @@ export default function ReservationPage() {
   const navigate = useNavigate();
 
   const currentUser = getCurrentUser();
+  const {uid} = useAuth();
 
   const [event, setEvent] = useState<TEvent | null>(null);
   const [loadingEvent, setLoadingEvent] = useState(true);
   const [eventError, setEventError] = useState<string | null>(null);
 
-  const [userName, setUserName] = useState("");
+  const [userName, setUserName] = useState(currentUser?.name ?? "");
   const [userEmail, setUserEmail] = useState(currentUser?.email ?? "");
   const [numberOfTickets, setNumberOfTickets] = useState(1);
 
@@ -37,7 +37,7 @@ export default function ReservationPage() {
   const [reservationId, setReservationId] = useState<string | null>(null);
 
   useEffect(() => {
-    if (!currentUser) {
+    if (!uid) {
       navigate("/login");
       return;
     }
@@ -48,6 +48,15 @@ export default function ReservationPage() {
       .catch((err) => setEventError(err?.message ?? "Failed to load event."))
       .finally(() => setLoadingEvent(false));
   }, [eventId]);
+
+useEffect(() => {
+    if (currentUser?.email) {
+      setUserEmail(currentUser.email);
+    }
+    if (currentUser?.name) {
+      setUserName(currentUser.name);
+    }
+}, [currentUser]);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();

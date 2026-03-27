@@ -3,6 +3,7 @@ package com.example.ticketbackend.Controller;
 import com.example.ticketbackend.DTO.Request.RegisterRequestDTO;
 import com.example.ticketbackend.Model.User;
 import com.example.ticketbackend.Service.AuthService;
+import com.google.firebase.auth.FirebaseToken;
 import tools.jackson.databind.ObjectMapper;
 import com.google.cloud.Timestamp;
 import com.google.firebase.ErrorCode;
@@ -199,6 +200,89 @@ class AuthControllerTest {
         verify(authService, never()).registerUser(anyString(), anyString(), anyString(), ArgumentMatchers.any());
     }
 
+
+    /***
+     * register with phone endpoint tests
+     */
+
+    @Test
+    void testRegisterPhone_Success() throws Exception {
+
+        FirebaseToken mockToken = mock(FirebaseToken.class);
+        when(authService.verifyIdToken("test-token")).thenReturn(mockToken);
+        when(mockToken.getUid()).thenReturn("test-uid-123");
+
+        when(authService.registerUserPhone(
+                "test-uid-123",
+                registerRequest.getPhoneNumber(),
+                registerRequest.getName(),
+                registerRequest.getRole()
+        )).thenReturn(testUser);
+
+
+        mockMvc.perform(post("/api/auth/register-phone")
+                        .with(csrf())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .header("Authorization", "Bearer test-token")
+                        .content(objectMapper.writeValueAsString(registerRequest)))
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.uid").value("test-uid-123"))
+                .andExpect(jsonPath("$.name").value("Test User"));
+
+        // verify service methods were called
+        verify(authService).registerUserPhone(
+                "test-uid-123",
+                registerRequest.getPhoneNumber(),
+                registerRequest.getName(),
+                registerRequest.getRole()
+        );
+        verify(authService).verifyIdToken("test-token");
+    }
+
+    @Test
+    void testRegisterPhone_invalidToken() throws Exception {
+
+        when(authService.verifyIdToken("invalid-token")).thenThrow(
+                new FirebaseAuthException(
+                        new FirebaseException(ErrorCode.UNAUTHENTICATED, "invalid Firebase token", null)
+                )
+        );
+
+        mockMvc.perform(post("/api/auth/register-phone")
+                        .with(csrf())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(registerRequest))
+                        .header("Authorization", "Bearer invalid-token"))
+                .andExpect(status().isUnauthorized());
+
+        verify(authService).verifyIdToken("invalid-token");
+        verify(authService, never()).registerUserPhone(anyString(), anyString(), anyString(), any());
+    }
+
+    @Test
+    void testRegisterPhone_missingToken() throws Exception {
+
+        mockMvc.perform(post("/api/auth/register-phone")
+                        .with(csrf())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(registerRequest)))
+                .andExpect(status().isUnauthorized());
+    }
+
+    @Test
+    void testRegisterPhone_InvalidContentType() throws Exception {
+
+        mockMvc.perform(post("/api/auth/register-phone")
+                        .with(csrf())
+                        .header("Authorization", "Bearer test-token")
+                        .contentType(MediaType.TEXT_PLAIN)
+                        .content("some text"))
+                .andExpect(status().isUnsupportedMediaType());
+
+        verify(authService, never()).verifyIdToken(anyString());
+        verify(authService, never()).registerUserPhone(anyString(), anyString(), anyString(), ArgumentMatchers.any());
+    }
+
     /**
      * Get profile endpoint tests
      */
@@ -206,53 +290,83 @@ class AuthControllerTest {
     @Test
     void testGetProfile_Success() throws Exception {
         when(authService.getUserByUid("test-uid-123")).thenReturn(testUser);
-
+        when(authService.verifyUidWithToken("test-uid-123", "test-token")).thenReturn(true);
         // act and assert
         mockMvc.perform(get("/api/auth/profile")
-                        .param("uid", "test-uid-123"))
+                        .param("uid", "test-uid-123")
+                        .header("Authorization", "Bearer test-token"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.uid").value("test-uid-123"))
                 .andExpect(jsonPath("$.email").value("test@example.com"))
                 .andExpect(jsonPath("$.name").value("Test User"))
                 .andExpect(jsonPath("$.role").value("CUSTOMER"));
 
+        verify(authService).verifyUidWithToken("test-uid-123", "test-token");
         verify(authService).getUserByUid("test-uid-123");
     }
 
     @Test
     void testGetProfile_UserNotFound() throws Exception {
         when(authService.getUserByUid("nonexistent-uid")).thenReturn(null);
-
+        when(authService.verifyUidWithToken("nonexistent-uid", "test-token")).thenReturn(true);
         // act and assert
         mockMvc.perform(get("/api/auth/profile")
-                        .param("uid", "nonexistent-uid"))
+                        .param("uid", "nonexistent-uid")
+                        .header("Authorization", "Bearer test-token"))
                 .andExpect(status().isNotFound())
                 .andExpect(jsonPath("$.message").value("User not found"));
 
+        verify(authService).verifyUidWithToken("nonexistent-uid", "test-token");
         verify(authService).getUserByUid("nonexistent-uid");
+    }
+
+    @Test
+    void testGetProfile_invalidToken() throws Exception {
+        when(authService.verifyUidWithToken("test-uid-123", "test-token")).thenReturn(true);
+
+        mockMvc.perform(get("/api/auth/profile")
+                        .param("uid", "test-uid-123")
+                        .header("Authorization", "Bearer invalid-token"))
+                .andExpect(status().isForbidden());
+
+        verify(authService).verifyUidWithToken("test-uid-123", "invalid-token");
     }
 
     @Test
     void testGetProfile_ExecutionException() throws Exception {
         when(authService.getUserByUid("test-uid-123"))
                 .thenThrow(new ExecutionException(new RuntimeException("Database error")));
+        when(authService.verifyUidWithToken("test-uid-123", "test-token")).thenReturn(true);
 
         // act and assert
         mockMvc.perform(get("/api/auth/profile")
+                        .header("Authorization", "Bearer test-token")
                         .param("uid", "test-uid-123"))
                 .andExpect(status().isInternalServerError())
                 .andExpect(jsonPath("$.message").value(containsString("Server error")));
 
+        verify(authService).verifyUidWithToken("test-uid-123", "test-token");
         verify(authService).getUserByUid("test-uid-123");
     }
 
     @Test
     void testGetProfile_MissingUidParameter() throws Exception {
         // simulate missing required parameter
-        mockMvc.perform(get("/api/auth/profile"))
+        mockMvc.perform(get("/api/auth/profile")
+                .header("Authorization", "Bearer test-token"))
                 .andExpect(status().isBadRequest());
 
         verify(authService, never()).getUserByUid(anyString());
+    }
+
+    @Test
+    void testGetProfile_MissingToken() throws Exception {
+
+        mockMvc.perform(get("/api/auth/profile")
+                        .param("uid", "test-uid-123"))
+                .andExpect(status().isUnauthorized());
+
+        verify(authService, never()).verifyUidWithToken(anyString(), anyString());
     }
 
     /**
