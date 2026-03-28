@@ -6,112 +6,69 @@ import { logout as logoutService } from "@/services/AuthService";
 import { Role } from "@/models/User";
 
 export default function Header() {
-    
-    const {uid, userProfile} = useAuth();
+    const { uid, userProfile, loading } = useAuth();
     const role = userProfile?.role;
     const location = useLocation();
     const navigate = useNavigate();
-    if (!uid) return null;
+
+    if (loading || !uid) return null;
 
     const isActive = (path: string) => {
         if (path === "/") return location.pathname === "/";
         return location.pathname.includes(path);
     };
 
-    const logout = async () => {    
+    const logout = () => {
         logoutService();
-        navigate("/")
-    }
+        navigate("/");
+    };
 
     return (
-
         <div className="flex justify-between items-center w-full px-6 py-3
         bg-white border-b shadow-sm sticky top-0 z-50">
 
             <Link to="/" className="flex items-center gap-3">
-
                 <div className="bg-[#3B82F6] p-2 rounded-xl shadow-sm">
-                    <Ticket className="w-6 h-6 text-white"/>
+                    <Ticket className="w-6 h-6 text-white" />
                 </div>
-
-                <h1 className="text-xl font-semibold text-blue-600">
-                    Tixy
-                </h1>
-
+                <h1 className="text-xl font-semibold text-blue-600">Tixy</h1>
             </Link>
 
-            {/* Navigation */}
-            <div className="flex gap-3">
-
+            <div className="flex gap-3 items-center">
                 <Link
                     to="/"
                     className={`px-4 py-2 rounded-full transition ${
-                        isActive("/")
-                            ? "bg-blue-100 text-blue-600"
-                            : "text-gray-600 hover:bg-blue-50"
+                        isActive("/") ? "bg-blue-100 text-blue-600" : "text-gray-600 hover:bg-blue-50"
                     }`}
                 >
                     Home
                 </Link>
-                { uid ? (
-                <>
-                    <Link
-                        to="/dashboard"
-                        className={`px-4 py-2 rounded-full transition ${
-                            isActive("/dashboard")
-                                ? "bg-blue-100 text-blue-600"
-                                : "text-gray-600 hover:bg-blue-50"
-                        }`}
-                    >
-                        <div className="flex">
-                            <User className="w-6 h-6"></User>
-                            Dashboard
-                        </div>
-                        
-                    </Link> 
-                    {role===Role.customer &&
+
+                {role === Role.customer && (
                     <Link
                         to="/events"
                         className={`px-4 py-2 rounded-full transition ${
-                            isActive("/events")
-                                ? "bg-blue-100 text-blue-600"
-                                : "text-gray-600 hover:bg-blue-50"
+                            isActive("/events") ? "bg-blue-100 text-blue-600" : "text-gray-600 hover:bg-blue-50"
                         }`}
                     >
                         Events
                     </Link>
-                    }
-                    <Button onClick={logout} className="px-4 py-2 rounded-full transition">
-                        Logout
-                    </Button>
-                </>
-                ) : (
-                <>
-                    <Link
-                        to="/login"
-                        className={`px-4 py-2 rounded-full transition ${
-                            isActive("/login")
-                                ? "bg-blue-100 text-blue-600"
-                                : "text-gray-600 hover:bg-blue-50"
-                        }`}
-                    >
-                        Login
-                    </Link>
-                    <Link
-                        to="/signup"
-                        className={`px-4 py-2 rounded-full transition ${
-                            isActive("/signup")
-                                ? "bg-blue-100 text-blue-600"
-                                : "text-gray-600 hover:bg-blue-50"
-                        }`}
-                    >
-                        Sign Up
-                    </Link>
-                </>
                 )}
 
-            </div>
+                <Link
+                    to="/dashboard"
+                    className={`px-4 py-2 rounded-full transition flex items-center gap-1.5 ${
+                        isActive("/dashboard") ? "bg-blue-100 text-blue-600" : "text-gray-600 hover:bg-blue-50"
+                    }`}
+                >
+                    <User className="w-4 h-4" />
+                    Dashboard
+                </Link>
 
+                <Button onClick={logout} className="px-4 py-2 rounded-full transition">
+                    Logout
+                </Button>
+            </div>
         </div>
     );
 }

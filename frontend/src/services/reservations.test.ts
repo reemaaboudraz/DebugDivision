@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import { createReservation, getReservationsByUser } from "./reservations";
+import { createReservation, getReservationsByUser, cancelReservation } from "./reservations";
 import type { CreateReservationRequest, ReservationResponse } from "./reservations";
 
 const mockPayload: CreateReservationRequest = {
@@ -18,6 +18,7 @@ const mockReservation: ReservationResponse = {
   numberOfTickets: 2,
   status: "CONFIRMED",
   createdAt: { seconds: 1893456000, nanos: 0 },
+  eventDate: { seconds: 1893456000, nanos: 0 },
 };
 
 beforeEach(() => {
@@ -118,5 +119,42 @@ describe("getReservationsByUser", () => {
     await expect(getReservationsByUser("john@example.com")).rejects.toThrow(
       "Failed to fetch reservations (503)",
     );
+  });
+});
+
+describe("cancelReservation", () => {
+  it("calls PATCH /reservations/{id}/cancel and returns updated reservation", async () => {
+    const cancelledReservation = { ...mockReservation, status: "CANCELLED" };
+    global.fetch = vi.fn().mockResolvedValue({
+      ok: true,
+      json: () => Promise.resolve(cancelledReservation),
+    });
+
+    const result = await cancelReservation("res-1");
+    expect(result).toEqual(cancelledReservation);
+    expect(fetch).toHaveBeenCalledWith(
+      expect.stringContaining("/reservations/res-1/cancel"),
+      expect.objectContaining({ method: "PATCH" }),
+    );
+  });
+
+  it("throws error with server message on failure", async () => {
+    global.fetch = vi.fn().mockResolvedValue({
+      ok: false,
+      status: 400,
+      json: () => Promise.resolve({ message: "Reservation is already cancelled." }),
+    });
+
+    await expect(cancelReservation("res-1")).rejects.toThrow("Reservation is already cancelled.");
+  });
+
+  it("throws fallback error when no message in body", async () => {
+    global.fetch = vi.fn().mockResolvedValue({
+      ok: false,
+      status: 500,
+      json: () => Promise.reject(new Error("parse error")),
+    });
+
+    await expect(cancelReservation("res-1")).rejects.toThrow("Cancellation failed (500)");
   });
 });
