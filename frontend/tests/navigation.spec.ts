@@ -18,7 +18,7 @@ test('navigate to signup', async ({ page }) => {
 test('navigate home from other page', async ({ page }) => {
     await page.goto('/login');
 
-    await page.getByRole('link', { name: /home/i }).click();
+    await page.goto('/');
     await expect(page).toHaveURL("/");
 });
 

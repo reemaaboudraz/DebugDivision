@@ -20,7 +20,7 @@ export default function CreateEventPage() {
 
   const [name, setName] = useState("");
   const [location, setLocation] = useState("");
-  const [availableTickets, setAvailableTickets] = useState<number>(0);
+  const [availableTickets, setAvailableTickets] = useState("");
   const [dateOnly, setDateOnly] = useState(""); 
   const [category, setCategory] = useState<"movie" | "concert" | "sports" | "travel">("movie");
   const [artist, setArtist] = useState("");
@@ -30,7 +30,6 @@ export default function CreateEventPage() {
   const [overview, setOverview] = useState("");
   const [venue, setVenue] = useState("");
   const [imageUrl, setImageUrl] = useState("");
-  const [buyTicketsUrl, setBuyTicketsUrl] = useState("");
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
     setError(null);
@@ -38,15 +37,17 @@ export default function CreateEventPage() {
 
     if (!name.trim()) return setError("Event name is required.");
     if (!dateOnly) return setError("Event date is required.");
-    if (availableTickets < 0) return setError("Available tickets must be 0 or more.");
-
+    const parsedAvailableTickets = Number(availableTickets);
+     if (!Number.isInteger(parsedAvailableTickets) || parsedAvailableTickets < 0) {
+      return setError("Available tickets must be 0 or more.");
+     }
     const eventDateMillis = dateOnlyToNoonUtcMillis(dateOnly);
     if (!eventDateMillis) return setError("Invalid date.");
 
     const payload: CreateEventRequest = {
       name: name.trim(),
       location: location.trim(),
-      availableTickets,
+      availableTickets: parsedAvailableTickets,
       eventDateMillis,
       organizerId: "temp-organizer", // TODO: replace when auth exists
       category,
@@ -57,7 +58,6 @@ export default function CreateEventPage() {
       overview: overview.trim(),
       venue: venue.trim(),
       imageUrl: imageUrl.trim(),
-      buyTicketsUrl: buyTicketsUrl.trim(),
     };
 
     setSubmitting(true);
@@ -144,7 +144,7 @@ export default function CreateEventPage() {
               min={0}
               className="w-full rounded-xl border border-gray-200 px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-200"
               value={availableTickets}
-              onChange={(e) => setAvailableTickets(Number(e.target.value))}
+              onChange={(e) => setAvailableTickets(e.target.value)}
             />
           </div>
         </div>
@@ -224,16 +224,6 @@ export default function CreateEventPage() {
             className="w-full rounded-xl border border-gray-200 px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-200"
             value={imageUrl}
             onChange={(e) => setImageUrl(e.target.value)}
-            placeholder="https://..."
-          />
-        </div>
-
-        <div>
-          <label className="block text-sm text-[#1F2937] mb-2">Buy Tickets URL</label>
-          <input
-            className="w-full rounded-xl border border-gray-200 px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-200"
-            value={buyTicketsUrl}
-            onChange={(e) => setBuyTicketsUrl(e.target.value)}
             placeholder="https://..."
           />
         </div>
