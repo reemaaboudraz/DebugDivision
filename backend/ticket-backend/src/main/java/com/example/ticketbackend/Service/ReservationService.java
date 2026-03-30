@@ -43,6 +43,18 @@ public class ReservationService {
         }
     }
 
+    public Reservation cancelReservation(String reservationId) throws ExecutionException, InterruptedException {
+        if (reservationId == null || reservationId.isBlank())
+            throw new IllegalArgumentException("reservationId is required.");
+        try {
+            return reservationRepository.cancelReservationAtomically(reservationId);
+        } catch (ExecutionException e) {
+            if (e.getCause() instanceof IllegalArgumentException)
+                throw (IllegalArgumentException) e.getCause();
+            throw e;
+        }
+    }
+
     public Reservation getReservationById(String id) throws ExecutionException, InterruptedException {
         return reservationRepository.getReservationById(id);
     }

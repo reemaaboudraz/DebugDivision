@@ -32,6 +32,18 @@ public class ReservationController {
         }
     }
 
+    @PatchMapping("/{id}/cancel")
+    public ResponseEntity<?> cancelReservation(@PathVariable String id) {
+        try {
+            Reservation reservation = reservationService.cancelReservation(id);
+            return ResponseEntity.ok(reservation);
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Map.of("message", e.getMessage()));
+        } catch (ExecutionException | InterruptedException e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(Map.of("message", "Server error: " + e.getMessage()));
+        }
+    }
+
     @GetMapping("/{id}")
     public ResponseEntity<?> getReservationById(@PathVariable String id) {
         try {

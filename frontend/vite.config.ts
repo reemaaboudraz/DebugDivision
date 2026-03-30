@@ -16,9 +16,20 @@ export default defineConfig({
   },
   server: {
     proxy: {
-      "/api": {
+      "/api": { target: "http://localhost:8080", changeOrigin: true },
+      "/reservations": {
         target: "http://localhost:8080",
         changeOrigin: true,
+        bypass: (req) => {
+          if (req.headers.accept?.includes("text/html")) return req.url;
+        },
+      },
+      "/events": {
+        target: "http://localhost:8080",
+        changeOrigin: true,
+        bypass: (req) => {
+          if (req.headers.accept?.includes("text/html")) return req.url;
+        },
       },
     },
   },

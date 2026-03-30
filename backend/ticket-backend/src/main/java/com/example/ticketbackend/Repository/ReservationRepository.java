@@ -21,7 +21,8 @@ public class ReservationRepository {
 
     /**
      * Atomically checks ticket availability, decrements the event's ticket count,
-     * and saves the reservation — all in a single Firestore transaction.
+     * saves the reservation (with eventDate copied from the event), and returns it —
+     * all in a single Firestore transaction.
      * Throws IllegalArgumentException (wrapped in ExecutionException) if the event
      * is not found or does not have enough tickets.
      */
@@ -53,6 +54,8 @@ public class ReservationRepository {
             reservation.setNumberOfTickets(numberOfTickets);
             reservation.setStatus("CONFIRMED");
             reservation.setCreatedAt(Timestamp.now());
+            Timestamp eventDate = eventSnap.getTimestamp("eventDate");
+            reservation.setEventDate(eventDate);
 
             transaction.set(reservationRef, reservation);
             return reservation;
@@ -61,11 +64,38 @@ public class ReservationRepository {
         return future.get();
     }
 
-    public String saveReservation(Reservation reservation) throws ExecutionException, InterruptedException {
-        ApiFuture<DocumentReference> future = db.collection("reservations").add(reservation);
-        String generatedId = future.get().getId();
-        reservation.setId(generatedId);
-        return generatedId;
+    public Reservation cancelReservationAtomically(String reservationId)
+            throws ExecutionException, InterruptedException {
+
+        DocumentReference reservationRef = db.collection("reservations").document(reservationId);
+
+        ApiFuture<Reservation> future = db.runTransaction(transaction -> {
+            DocumentSnapshot snap = transaction.get(reservationRef).get();
+
+            if (!snap.exists())
+                throw new IllegalArgumentException("Reservation not found.");
+            if ("CANCELLED".equals(snap.getString("status")))
+                throw new IllegalArgumentException("Reservation is already cancelled.");
+
+            String eventId = snap.getString("eventId");
+            int tickets = snap.getLong("numberOfTickets").intValue();
+
+            DocumentReference eventRef = db.collection("events").document(eventId);
+            DocumentSnapshot eventSnap = transaction.get(eventRef).get();
+            if (eventSnap.exists()) {
+                long available = eventSnap.getLong("availableTickets");
+                transaction.update(eventRef, "availableTickets", available + tickets);
+            }
+
+            transaction.update(reservationRef, "status", "CANCELLED");
+
+            Reservation reservation = snap.toObject(Reservation.class);
+            reservation.setId(reservationId);
+            reservation.setStatus("CANCELLED");
+            return reservation;
+        });
+
+        return future.get();
     }
 
     public Reservation getReservationById(String id) throws ExecutionException, InterruptedException {

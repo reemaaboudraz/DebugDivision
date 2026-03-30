@@ -16,13 +16,12 @@ import { Role } from "@/models/User";
 
 
 
-function DashboardRedirect(){
-    const {userProfile} = useAuth();
-    if (userProfile?.role == Role.organizer)
-        return <Navigate to="/organizer/dashboard" replace/>;
-    if (userProfile?.role == Role.customer)
-        return <Navigate to="/user/dashboard" replace/>;
-    else return <Navigate to="/404" replace/>;
+function DashboardRedirect() {
+    const { userProfile, loading } = useAuth();
+    if (loading) return null;
+    if (userProfile?.role === Role.organizer) return <Navigate to="/organizer/dashboard" replace />;
+    if (userProfile?.role === Role.customer) return <Navigate to="/user/dashboard" replace />;
+    return <Navigate to="/404" replace />;
 }
 
 const router = createBrowserRouter([
@@ -78,7 +77,7 @@ const router = createBrowserRouter([
              {
                 path: "user/dashboard",
                 element: (
-                    <ProtectedRoute role={"CUSTOMER"} errorMessage="Only Cutomers May Access This Page">
+                    <ProtectedRoute role={"CUSTOMER"} errorMessage="Only Customers May Access This Page">
                         <CustomerDashboard/>
                     </ProtectedRoute>
                 )
@@ -86,7 +85,7 @@ const router = createBrowserRouter([
             {
                 path: "/reservation/:eventId",
                 element: (
-                    <ProtectedRoute role={"CUSTOMER"} errorMessage="Only Cutomers May Access This Page">
+                    <ProtectedRoute role={"CUSTOMER"} errorMessage="Only Customers May Access This Page">
                         <ReservationPage />
                     </ProtectedRoute>
                 ),
