@@ -3,6 +3,7 @@ import { useNavigate, useParams } from "react-router-dom";
 import { Calendar, MapPin, Ticket } from "lucide-react";
 import { getEventById } from "@/services/events";
 import { createReservation } from "@/services/reservations";
+import { sendReservationConfirmationEmail } from "@/services/emailConfirmationService";
 import { useAuth } from "@/AuthContext";
 import { type UserProfile } from "@/models/User";
 import type { TEvent } from "@/models/Event";
@@ -35,6 +36,37 @@ export default function ReservationPage() {
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
   const [reservationId, setReservationId] = useState<string | null>(null);
+
+  const [isSendingEmail, setIsSendingEmail] = useState(false);
+  const [emailMessage, setEmailMessage] = useState("");
+
+  const handleSendConfirmationEmail = async () => {
+  if (!reservationId || !event) return;
+
+  console.log("reservationId:", reservationId); // 👈 add this
+  console.log("event:", event);                 // 👈 add this
+
+  try {
+    setIsSendingEmail(true);
+    setEmailMessage("");
+
+    await sendReservationConfirmationEmail({
+      id: reservationId,
+      userName: currentUser?.name || "User",
+      userEmail: currentUser?.email || "",
+      eventName: event.name,
+      eventDate: event.eventDate,
+      status: "ACTIVE",
+    });
+
+    setEmailMessage("Confirmation email sent successfully.");
+  } catch (error) {
+    console.error("EmailJS error:", error);
+    setEmailMessage("Failed to send confirmation email.");
+  } finally {
+    setIsSendingEmail(false);
+  }
+};
 
   useEffect(() => {
     if (!uid) {
@@ -112,6 +144,17 @@ useEffect(() => {
           <p className="text-sm text-[#6B7280] mb-6">
             Confirmation ID: <span className="font-mono">{reservationId}</span>
           </p>
+          <button
+            onClick={handleSendConfirmationEmail}
+            disabled={isSendingEmail}
+            className="text-sm text-[#3B82F6] underline hover:text-[#2563EB] disabled:text-gray-400 mb-2"
+          >
+            {isSendingEmail ? "Sending..." : "Send email confirmation"}
+          </button>
+
+          {emailMessage && (
+            <p className="text-sm text-[#6B7280] mb-6">{emailMessage}</p>
+          )}
           <div className="flex justify-center gap-3">
             <button
               onClick={() => navigate("/events")}

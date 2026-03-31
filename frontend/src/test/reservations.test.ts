@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import { createReservation, getReservationsByUser, cancelReservation } from "./reservations";
-import type { CreateReservationRequest, ReservationResponse } from "./reservations";
+import { createReservation, getReservationsByUser, cancelReservation } from "@/services/reservations";
+import type { CreateReservationRequest, ReservationResponse } from "@/services/reservations";
 
 const mockPayload: CreateReservationRequest = {
   eventId: "event-1",

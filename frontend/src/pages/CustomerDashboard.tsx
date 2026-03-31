@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { Calendar, Ticket, XCircle, AlertTriangle, Loader2, PartyPopper, Clock } from "lucide-react";
 import { useAuth } from "@/AuthContext";
 import { getReservationsByUser, cancelReservation } from "@/services/reservations";
+import { sendCancellationConfirmationEmail } from "@/services/emailConfirmationService"; 
 import type { ReservationResponse } from "@/services/reservations";
 import Profile from "@/components/auth/Profile";
 
@@ -160,6 +161,16 @@ export default function CustomerDashboard() {
     try {
       const updated = await cancelReservation(cancelTarget.id);
       setReservations((prev) => prev.map((r) => (r.id === updated.id ? updated : r)));
+
+      await sendCancellationConfirmationEmail({
+      id: cancelTarget.id,
+      userName: userProfile?.name || "User",
+      userEmail: userProfile?.email || "",
+      eventName: cancelTarget.eventName,
+      eventDate: cancelTarget.eventDate,
+      status: "CANCELLED",
+    });
+    
       setCancelTarget(null);
     } catch (err: unknown) {
       setCancelError(err instanceof Error ? err.message : "Cancellation failed.");
