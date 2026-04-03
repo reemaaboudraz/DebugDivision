@@ -213,6 +213,32 @@ class EventRepositoryTest {
     }
 
     @Test
+    void testGetAllEvents_FiltersCancelledEvents() throws ExecutionException, InterruptedException {
+        Event cancelledEvent = new Event();
+        cancelledEvent.setId("cancelled-event-id");
+        cancelledEvent.setName("Cancelled Event");
+        cancelledEvent.setCancelled(true);
+
+        QueryDocumentSnapshot cancelledDoc = mock(QueryDocumentSnapshot.class);
+
+        when(firestore.collection("events")).thenReturn(collectionReference);
+        when(collectionReference.get()).thenReturn(querySnapshotFuture);
+        when(querySnapshotFuture.get()).thenReturn(querySnapshot);
+        when(querySnapshot.getDocuments()).thenReturn(Arrays.asList(queryDocumentSnapshot, cancelledDoc));
+
+        when(queryDocumentSnapshot.toObject(Event.class)).thenReturn(testEvent);
+        when(queryDocumentSnapshot.getId()).thenReturn("test-event-id");
+
+        when(cancelledDoc.toObject(Event.class)).thenReturn(cancelledEvent);
+
+        List<Event> result = eventRepository.getAllEvents();
+
+        assertNotNull(result);
+        assertEquals(1, result.size());
+        assertEquals("test-event-id", result.get(0).getId());
+    }
+
+    @Test
     void testGetAllEvents_Empty() throws ExecutionException, InterruptedException {
         when(firestore.collection("events")).thenReturn(collectionReference);
         when(collectionReference.get()).thenReturn(querySnapshotFuture);
@@ -290,7 +316,7 @@ class EventRepositoryTest {
     void testDeleteEvent_Success() throws ExecutionException, InterruptedException {
         when(firestore.collection("events")).thenReturn(collectionReference);
         when(collectionReference.document("test-event-id")).thenReturn(documentReference);
-        when(documentReference.delete()).thenReturn(writeResultFuture);
+        when(documentReference.update("cancelled", true)).thenReturn(writeResultFuture);
         when(writeResultFuture.get()).thenReturn(null);
 
         // Act
@@ -299,7 +325,7 @@ class EventRepositoryTest {
         // Assert
         verify(firestore).collection("events");
         verify(collectionReference).document("test-event-id");
-        verify(documentReference).delete();
+        verify(documentReference).update("cancelled", true);
         verify(writeResultFuture).get();
     }
 
@@ -307,7 +333,7 @@ class EventRepositoryTest {
     void testDeleteEvent_ExecutionException() throws ExecutionException, InterruptedException {
         when(firestore.collection("events")).thenReturn(collectionReference);
         when(collectionReference.document("test-event-id")).thenReturn(documentReference);
-        when(documentReference.delete()).thenReturn(writeResultFuture);
+        when(documentReference.update("cancelled", true)).thenReturn(writeResultFuture);
         when(writeResultFuture.get()).thenThrow(new ExecutionException("Database error", new Throwable()));
 
         assertThrows(ExecutionException.class, () -> {
@@ -316,6 +342,6 @@ class EventRepositoryTest {
 
         verify(firestore).collection("events");
         verify(collectionReference).document("test-event-id");
-        verify(documentReference).delete();
+        verify(documentReference).update("cancelled", true);
     }
 }

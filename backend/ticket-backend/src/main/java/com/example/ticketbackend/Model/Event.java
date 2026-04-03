@@ -19,6 +19,7 @@ public class Event {
     private String venue;
     private String imageUrl;
     private String buyTicketsUrl;
+    private boolean cancelled;
 
     public Event() {}
 
@@ -84,4 +85,7 @@ public class Event {
 
     public String getBuyTicketsUrl() { return buyTicketsUrl; }
     public void setBuyTicketsUrl(String buyTicketsUrl) { this.buyTicketsUrl = buyTicketsUrl; }
+
+    public boolean isCancelled() { return cancelled; }
+    public void setCancelled(boolean cancelled) { this.cancelled = cancelled; }
 }

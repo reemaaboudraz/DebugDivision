@@ -38,7 +38,7 @@ public class EventRepository {
         List<Event> events = new ArrayList<>();
         for (DocumentSnapshot doc : snapshot.getDocuments()) {
             Event event = doc.toObject(Event.class);
-            if (event != null) {
+            if (event != null && !event.isCancelled()) {
                 event.setId(doc.getId());
                 events.add(event);
             }
@@ -47,7 +47,7 @@ public class EventRepository {
     }
 
     public void deleteEvent(String id) throws ExecutionException, InterruptedException {
-        db.collection("events").document(id).delete().get();
+        db.collection("events").document(id).update("cancelled", true).get();
     }
 
     public void updateEvent(Event event) throws ExecutionException, InterruptedException {

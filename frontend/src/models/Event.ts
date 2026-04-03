@@ -17,6 +17,7 @@ export type TEvent = {
   venue?: string;
   imageUrl?: string;
   buyTicketsUrl?: string;
+  cancelled?: boolean;
 };
 
 export type CreateEventRequest = {

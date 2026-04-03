@@ -15,6 +15,7 @@ export type ReservationResponse = {
   userEmail: string;
   numberOfTickets: number;
   status: string;
+  cancelReason?: string;
   createdAt: { seconds: number; nanos: number };
   eventDate: { seconds: number; nanos: number } | null;
 };

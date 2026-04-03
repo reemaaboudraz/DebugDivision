@@ -3,6 +3,7 @@ package com.example.ticketbackend.Service;
 import com.example.ticketbackend.DTO.Request.CreateEventRequest;
 import com.example.ticketbackend.Model.Event;
 import com.example.ticketbackend.Repository.EventRepository;
+import com.example.ticketbackend.Repository.ReservationRepository;
 import com.google.cloud.Timestamp;
 import org.springframework.stereotype.Service;
 
@@ -13,9 +14,11 @@ import java.util.concurrent.ExecutionException;
 public class EventService {
 
     private final EventRepository eventRepository;
+    private final ReservationRepository reservationRepository;
 
-    public EventService(EventRepository eventRepository) {
+    public EventService(EventRepository eventRepository, ReservationRepository reservationRepository) {
         this.eventRepository = eventRepository;
+        this.reservationRepository = reservationRepository;
     }
 
     public String createEvent(CreateEventRequest req) throws ExecutionException, InterruptedException {
@@ -62,6 +65,7 @@ public class EventService {
     }
 
     public void deleteEvent(String id) throws ExecutionException, InterruptedException {
+        reservationRepository.cancelReservationsByEventId(id);
         eventRepository.deleteEvent(id);
     }
 
