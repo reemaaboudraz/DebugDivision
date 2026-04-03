@@ -10,6 +10,7 @@ public class Reservation {
     private String userEmail;
     private int numberOfTickets;
     private String status; // CONFIRMED, CANCELLED
+    private String cancelReason; // EVENT_CANCELLED, or null if cancelled by customer
     private Timestamp createdAt;
     private Timestamp eventDate;
 
@@ -35,6 +36,9 @@ public class Reservation {
 
     public String getStatus() { return status; }
     public void setStatus(String status) { this.status = status; }
+
+    public String getCancelReason() { return cancelReason; }
+    public void setCancelReason(String cancelReason) { this.cancelReason = cancelReason; }
 
     public Timestamp getCreatedAt() { return createdAt; }
     public void setCreatedAt(Timestamp createdAt) { this.createdAt = createdAt; }

@@ -115,6 +115,10 @@ function ReservationCard({
 
         <p className="text-xs text-[#9CA3AF]">ID: <span className="font-mono">{reservation.id}</span></p>
 
+        {isCancelled && reservation.cancelReason === "EVENT_CANCELLED" && (
+          <p className="text-xs text-amber-600 font-medium">This event was cancelled by the organizer.</p>
+        )}
+
         {!isCancelled && (
           <button
             onClick={() => onCancelRequest(reservation)}

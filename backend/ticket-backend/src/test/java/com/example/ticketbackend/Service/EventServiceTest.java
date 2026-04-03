@@ -3,6 +3,7 @@ package com.example.ticketbackend.Service;
 import com.example.ticketbackend.DTO.Request.CreateEventRequest;
 import com.example.ticketbackend.Model.Event;
 import com.example.ticketbackend.Repository.EventRepository;
+import com.example.ticketbackend.Repository.ReservationRepository;
 import com.google.cloud.Timestamp;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -20,6 +21,7 @@ import java.util.concurrent.ExecutionException;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.argThat;
+import org.mockito.InOrder;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
@@ -27,6 +29,9 @@ class EventServiceTest {
 
     @Mock
     private EventRepository eventRepository;
+
+    @Mock
+    private ReservationRepository reservationRepository;
 
     @InjectMocks
     private EventService eventService;
@@ -395,15 +400,18 @@ void testCreateEvent_NewFieldsDefaultToEmptyWhenNull() throws ExecutionException
 
     @Test
     void testDeleteEvent_Success() throws ExecutionException, InterruptedException {
+        doNothing().when(reservationRepository).cancelReservationsByEventId("test-event-id");
         doNothing().when(eventRepository).deleteEvent("test-event-id");
 
         eventService.deleteEvent("test-event-id");
 
+        verify(reservationRepository).cancelReservationsByEventId("test-event-id");
         verify(eventRepository).deleteEvent("test-event-id");
     }
 
     @Test
     void testDeleteEvent_RepositoryFailure() throws ExecutionException, InterruptedException {
+        doNothing().when(reservationRepository).cancelReservationsByEventId("test-event-id");
         doThrow(new ExecutionException(new RuntimeException("Firestore error")))
                 .when(eventRepository).deleteEvent("test-event-id");
 
@@ -411,7 +419,20 @@ void testCreateEvent_NewFieldsDefaultToEmptyWhenNull() throws ExecutionException
             eventService.deleteEvent("test-event-id");
         });
 
+        verify(reservationRepository).cancelReservationsByEventId("test-event-id");
         verify(eventRepository).deleteEvent("test-event-id");
+    }
+
+    @Test
+    void testDeleteEvent_CancelsReservationsFirst() throws ExecutionException, InterruptedException {
+        doNothing().when(reservationRepository).cancelReservationsByEventId("test-event-id");
+        doNothing().when(eventRepository).deleteEvent("test-event-id");
+
+        eventService.deleteEvent("test-event-id");
+
+        InOrder inOrder = inOrder(reservationRepository, eventRepository);
+        inOrder.verify(reservationRepository).cancelReservationsByEventId("test-event-id");
+        inOrder.verify(eventRepository).deleteEvent("test-event-id");
     }
 
     /**

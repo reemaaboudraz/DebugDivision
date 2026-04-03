@@ -127,4 +127,17 @@ public class ReservationRepository {
         }
         return result;
     }
+
+    public void cancelReservationsByEventId(String eventId) throws ExecutionException, InterruptedException {
+        QuerySnapshot snapshot = db.collection("reservations")
+                .whereEqualTo("eventId", eventId)
+                .whereEqualTo("status", "CONFIRMED")
+                .get().get();
+        if (snapshot.isEmpty()) return;
+        WriteBatch batch = db.batch();
+        for (DocumentSnapshot doc : snapshot.getDocuments()) {
+            batch.update(doc.getReference(), "status", "CANCELLED", "cancelReason", "EVENT_CANCELLED");
+        }
+        batch.commit().get();
+    }
 }
