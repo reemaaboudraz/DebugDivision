@@ -112,7 +112,7 @@ export default function OrganizerDashboard() {
           </p>
         )}
 
-        {!loading && !error && events.length > 0 && (
+        {!loading && events.length > 0 && (
           <div className="flex flex-col gap-4 mt-8">
             {events.map((event) => (
               <EventCard
