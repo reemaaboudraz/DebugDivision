@@ -1,0 +1,108 @@
+@startuml
+left to right direction
+skinparam packageStyle rectangle
+skinparam shadowing false
+skinparam actorStyle awesome
+
+actor Guest
+actor Customer
+actor Organizer
+actor "Firebase Auth" as Firebase
+actor "Email Service" as Email
+
+Customer --|> Guest
+Organizer --|> Guest
+
+rectangle "DebugDivision Event Booking Platform" {
+
+  usecase "Browse Events" as UC_Browse
+  usecase "Filter Events by Category" as UC_FilterCategory
+  usecase "Filter Events by Date" as UC_FilterDate
+  usecase "Filter Events by Artist /\nOrganization / City / Country" as UC_FilterAdvanced
+  usecase "View Event Details" as UC_ViewDetails
+  usecase "Save Favorite Event" as UC_Favorite
+
+  usecase "Sign Up with Email" as UC_SignupEmail
+  usecase "Sign Up with Phone" as UC_SignupPhone
+  usecase "Log In with Email" as UC_LoginEmail
+  usecase "Log In with Phone" as UC_LoginPhone
+  usecase "Log Out" as UC_Logout
+  usecase "View Profile" as UC_ViewProfile
+
+  usecase "Access Customer Dashboard" as UC_CustomerDashboard
+  usecase "Reserve Tickets" as UC_Reserve
+  usecase "View My Reservations" as UC_ViewReservations
+  usecase "Cancel Reservation" as UC_CancelReservation
+  usecase "Send Reservation\nConfirmation Email" as UC_SendReservationEmail
+  usecase "Send Cancellation\nConfirmation Email" as UC_SendCancellationEmail
+
+  usecase "Access Organizer Dashboard" as UC_OrganizerDashboard
+  usecase "Create Event" as UC_CreateEvent
+  usecase "Edit Event" as UC_EditEvent
+  usecase "Delete Event" as UC_DeleteEvent
+  usecase "Manage Events" as UC_ManageEvents
+
+  usecase "Validate Authentication" as UC_ValidateAuth
+}
+
+Guest --> UC_Browse
+Guest --> UC_ViewDetails
+Guest --> UC_FilterCategory
+Guest --> UC_FilterDate
+Guest --> UC_FilterAdvanced
+Guest --> UC_SignupEmail
+Guest --> UC_SignupPhone
+Guest --> UC_LoginEmail
+Guest --> UC_LoginPhone
+
+Customer --> UC_Favorite
+Customer --> UC_ViewProfile
+Customer --> UC_Logout
+Customer --> UC_CustomerDashboard
+Customer --> UC_Reserve
+Customer --> UC_ViewReservations
+Customer --> UC_CancelReservation
+
+Organizer --> UC_ViewProfile
+Organizer --> UC_Logout
+Organizer --> UC_OrganizerDashboard
+Organizer --> UC_CreateEvent
+Organizer --> UC_EditEvent
+Organizer --> UC_DeleteEvent
+Organizer --> UC_ManageEvents
+
+UC_Browse .> UC_FilterCategory : <<include>>
+UC_Browse .> UC_FilterDate : <<include>>
+UC_Browse .> UC_FilterAdvanced : <<include>>
+UC_Browse .> UC_ViewDetails : <<extend>>
+
+UC_CustomerDashboard .> UC_ViewReservations : <<include>>
+UC_OrganizerDashboard .> UC_ManageEvents : <<include>>
+UC_ManageEvents .> UC_CreateEvent : <<include>>
+UC_ManageEvents .> UC_EditEvent : <<include>>
+UC_ManageEvents .> UC_DeleteEvent : <<include>>
+
+UC_Reserve .> UC_ValidateAuth : <<include>>
+UC_CancelReservation .> UC_ValidateAuth : <<include>>
+UC_CustomerDashboard .> UC_ValidateAuth : <<include>>
+UC_OrganizerDashboard .> UC_ValidateAuth : <<include>>
+UC_CreateEvent .> UC_ValidateAuth : <<include>>
+UC_EditEvent .> UC_ValidateAuth : <<include>>
+UC_DeleteEvent .> UC_ValidateAuth : <<include>>
+UC_ViewProfile .> UC_ValidateAuth : <<include>>
+UC_Logout .> UC_ValidateAuth : <<include>>
+
+UC_Reserve .> UC_SendReservationEmail : <<extend>>
+UC_CancelReservation .> UC_SendCancellationEmail : <<extend>>
+
+Firebase --> UC_ValidateAuth
+Firebase --> UC_SignupEmail
+Firebase --> UC_SignupPhone
+Firebase --> UC_LoginEmail
+Firebase --> UC_LoginPhone
+Firebase --> UC_Logout
+
+Email --> UC_SendReservationEmail
+Email --> UC_SendCancellationEmail
+}
+@enduml
